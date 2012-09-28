@@ -1,0 +1,25 @@
+<?php
+
+function commerce_braintree_requirements($phase) {
+  $requirements = array();
+  // Ensure translations do not break at install time
+  $t = get_t();
+
+  $requirements['braintree'] = array(
+    'title' => $t('Braintree Library'),
+  );
+
+  $libraries = libraries_get_libraries();
+  if (isset($libraries['braintree'])) {
+    $requirements['braintree']['value'] = $t('Installed');
+    $requirements['braintree']['severity'] = REQUIREMENT_OK;
+  }
+  else {
+    $requirements['braintree']['value'] = $t('Not Installed');
+    $requirements['braintree']['severity'] = REQUIREMENT_ERROR;
+    $requirements['braintree']['description'] = $t('Please install the example library %url.', array('%url' => 'http://example.com'));
+  }
+
+  return $requirements;
+}
+

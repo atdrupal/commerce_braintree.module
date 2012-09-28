@@ -1,8 +1,20 @@
 <?php
-include_once 'lib/Braintree.php';
+
+
+//require_once libraries_get_path("braintree") . "/lib/Braintree.php";
+
+//define('LB_PATH', libraries_get_path("braintree"));
+
 
 define('COMMERCE_BRAINTREE_LIVE', 'live');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
+
+
+function commerce_braintree_init() {
+  global $base_root;
+  include_once libraries_get_path("braintree") . "/lib/Braintree.php";
+  //dsm($base_path . libraries_get_path("braintree") . "/lib/Braintree.php");
+}
 
 
 /**
@@ -135,19 +147,21 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
 
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
   
-  dsm('You just enter submit checkout!thank');
   
-  dsm($payment_method);
-  dsm($pane_form);
-  dsm($pane_values);
-  dsm($order);
-  dsm($charge);
+//  dsm('You just enter submit checkout!thank');
+//  
+//  dsm($payment_method);
+//  dsm($pane_form);
+//  dsm($pane_values);
+//  dsm($order);
+//  dsm($charge);
   //setup braintree config
-  Braintree_Configuration::environment('asdasd');
-  //Braintree_Configuration::environment($payment_method['settings']['environment']);
+//  Braintree_Configuration::environment('asdasd');
+  Braintree_Configuration::environment($payment_method['settings']['environment']);
   Braintree_Configuration::merchantId($payment_method['settings']['merchant_id']);
   Braintree_Configuration::publicKey($payment_method['settings']['public_key']);
   Braintree_Configuration::privateKey($payment_method['settings']['private_key']);
+  
   
   
   // Determine the credit card type if possible for use in later code.
@@ -187,47 +201,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   // Get the default transaction type from the payment method settings.
 //  $txn_type = $payment_method['settings']['txn_type'];
 
-  // If txn_type has been specified in the pane values array, such as through
-  // the special select element we alter onto the payment terminal form, use
-  // that instead.
-  if (!empty($pane_values['txn_type'])) {
-    $txn_type = $pane_values['txn_type'];
-  }
-
-  // Build a name-value pair array for this transaction.
-  $nvp = array(
-    'x_type' => commerce_authnet_txn_type($txn_type),
-    'x_method' => 'CC',
-    'x_amount' => commerce_currency_amount_to_decimal($charge['amount'], $charge['currency_code']),
-    'x_card_num' => $pane_values['credit_card']['number'],
-    'x_exp_date' => $pane_values['credit_card']['exp_month'] . $pane_values['credit_card']['exp_year'],
-  );
-
-  if (isset($pane_values['credit_card']['code'])) {
-    $nvp['x_card_code'] = $pane_values['credit_card']['code'];
-  }
-
-  // Build a description for the order.
-  $description = array();
-
-  foreach ($order_wrapper->commerce_line_items as $delta => $line_item_wrapper) {
-    if (in_array($line_item_wrapper->type->value(), commerce_product_line_item_types())) {
-      $description[] = round($line_item_wrapper->quantity->value(), 2) . 'x ' . $line_item_wrapper->line_item_label->value();
-    }
-  }
-
-  // Add additional transaction invormation to the request array.
-  $nvp += array(
-    // Order Information
-    'x_invoice_num' => $order->order_number,
-    'x_description' => substr(implode(', ', $description), 0, 255),
-
-    // Customer Information
-    'x_email' => substr($order->mail, 0, 255),
-    'x_cust_id' => substr($order->uid, 0, 20),
-    'x_customer_ip' => substr(ip_address(), 0, 15),
-  );
-
+  
   // Prepare the billing address for use in the request.
   if ($order_wrapper->commerce_customer_billing->value()){
     $billing_address = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
@@ -238,61 +212,46 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
       $billing_address['last_name'] = implode(' ', $name_parts);
     }
 
-    $nvp += array(
+    $billing_address = array(
       // Customer Billing Address
-      'x_first_name' => substr($billing_address['first_name'], 0, 50),
-      'x_last_name' => substr($billing_address['last_name'], 0, 50),
-      'x_company' => substr($billing_address['organisation_name'], 0, 50),
-      'x_address' => substr($billing_address['thoroughfare'], 0, 60),
-      'x_city' => substr($billing_address['locality'], 0, 40),
-      'x_state' => substr($billing_address['administrative_area'], 0, 40),
-      'x_zip' => substr($billing_address['postal_code'], 0, 20),
-      'x_country' => $billing_address['country'],
+      'firstName' => substr($billing_address['first_name'], 0, 50),
+      'lastName' => substr($billing_address['last_name'], 0, 50),
+      'company' => substr($billing_address['organisation_name'], 0, 50),
+      'streetAddress' => substr($billing_address['thoroughfare'], 0, 60),
+      'postalCode' => substr($billing_address['postal_code'], 0, 20),
+      'countryCodeAlpha2' => $billing_address['country'],
     );
   }
   else {
     $billing_address = array();
   }
+  $credit_card = array(
+    'number' => $pane_values['credit_card']['number'],
+    'expirationDate' => $pane_values['credit_card']['exp_month'] . '/' .  $pane_values['credit_card']['exp_year'],
+    'billingAddress' => $billing_address
+  );
+  // Add additional transaction invormation to the request array.
+  $customer_info = array(
+    // Customer Information
+    'email' => substr($order->mail, 0, 255),
+    'id' => substr($order->uid, 0, 20),
+    'creditCard' => $credit_card
+  );
+  dsm($customer_info);
   
-  
-  //get info user from form checkout submit
-  $result = Braintree_Customer::create(array(
-    'firstName' => 'Mike',
-    'lastName' => 'Jones',
-    'company' => 'Jones Co.',
-    'email' => 'mike.jones@example.com',
-    'phone' => '419.555.1234',
-    'fax' => '419.555.1235',
-    'website' => 'http://example.com',
-    'creditCard' => array(
-        'number' => '5105105105105100',
-        'expirationDate' => '05/12',
-        'cvv' => '123',
-        'cardholderName' => 'Mike Jones',
-        'billingAddress' => array(
-            'firstName' => 'Drew',
-            'lastName' => 'Smith',
-            'company' => 'Smith Co.',
-            'streetAddress' => '1 E Main St',
-            'extendedAddress' => 'Suite 101',
-            'locality' => 'Chicago',
-            'region' => 'IL',
-            'postalCode' => '60622',
-            'countryCodeAlpha2' => 'US'
-        )
-    )
+  //create customer
+  $customer = Braintree_Customer::create($customer_info);
+  dsm($customer);
+  //if (!$customer->success)    return FALSE;
+
+  //create 
+  $subscription = Braintree_Subscription::create(array(
+    'paymentMethodToken' => 'a_token',
+    'planId' => 'teachers'
   ));
-  dsm($result);
-  
-//  if ($result->success) {
-//      print_r("success!: " . $result->transaction->id);
-//  } else if ($result->transaction) {
-//      print_r("Error processing transaction:");
-//      print_r("\n  code: " . $result->transaction->processorResponseCode);
-//      print_r("\n  text: " . $result->transaction->processorResponseText);
-//  } else {
-//      print_r("Validation errors: \n");
-//      print_r($result->errors->deepAll());
-//  }
+  dsm($subscription);
+  //Braintree_Customer
+  $a = $order['asd']['asd'];
+  if (empty($a)) $a = 4;
   
 }
