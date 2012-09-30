@@ -8,13 +8,17 @@
 
 define('COMMERCE_BRAINTREE_LIVE', 'live');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
-
-
-function commerce_braintree_init() {
-  global $base_root;
-  include_once libraries_get_path("braintree") . "/lib/Braintree.php";
-  //dsm($base_path . libraries_get_path("braintree") . "/lib/Braintree.php");
-}
+// module_load_include('.module', 'libraries', 'libraries');
+//commerce_braintree_load();
+//function commerce_braintree_load() {
+//  $file = './' . libraries_get_path(libraries_get_path) . "/lib/Braintree.phpe";
+//
+//  if (is_file($file)) {
+//    require_once $file;
+//  }
+//  
+//  //dsm($base_path . libraries_get_path("braintree") . "/lib/Braintree.php");
+//}
 
 
 /**
@@ -54,7 +58,7 @@ function commerce_braintree_default_settings() {
  */
 function commerce_braintree_settings_form($settings = NULL) {
   module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
-
+  //dsm();
   // Merge default settings into the stored settings array.
   $settings = (array) $settings + commerce_braintree_default_settings();
 
@@ -155,14 +159,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
 //  dsm($pane_values);
 //  dsm($order);
 //  dsm($charge);
-  //setup braintree config
-//  Braintree_Configuration::environment('asdasd');
-  Braintree_Configuration::environment($payment_method['settings']['environment']);
-  Braintree_Configuration::merchantId($payment_method['settings']['merchant_id']);
-  Braintree_Configuration::publicKey($payment_method['settings']['public_key']);
-  Braintree_Configuration::privateKey($payment_method['settings']['private_key']);
-  
-  
+ 
   
   // Determine the credit card type if possible for use in later code.
   if (!empty($pane_values['credit_card']['number'])) {
@@ -250,8 +247,103 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     'planId' => 'teachers'
   ));
   dsm($subscription);
-  //Braintree_Customer
-  $a = $order['asd']['asd'];
-  if (empty($a)) $a = 4;
   
 }
+
+
+/**
+ *
+ * Initializes the Braintree Library with configuration settings
+ */
+function commerce_braintree_initialize_library() {
+  //loading config payment
+  $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
+  
+  //Setup configuration
+  Braintree_Configuration::environment($payment['settings']['environment']);
+  Braintree_Configuration::merchantId($payment['settings']['merchant_id']);
+  Braintree_Configuration::publicKey($payment['settings']['public_key']);
+  Braintree_Configuration::privateKey($payment['settings']['private_key']);
+}
+
+/**
+ * create new customer
+ * @param stdClass $customer
+ * @return type 
+ */
+function commerce_braintree_customer_create(stdClass $customer) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  //create customer
+  $customer = Braintree_Customer::create($customer);
+  return $customer;
+}
+
+/**
+ * update customer info
+ * @param type $cid
+ * @param array $info
+ * @return type 
+ */
+function commerce_braintree_customer_update($cid, array $info) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  //update customer
+  $result = Braintree_Customer::update($cid, $info);
+  return $result;
+}
+
+/**
+ * get customer by id
+ * @param type $cid
+ * @return type 
+ */
+function commerce_braintree_customer_get(string $cid) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  //create customer
+  $customer = Braintree_Customer::find($cid);
+  return $customer;
+}
+
+/**
+ * delete customer by id
+ * @param type $cid
+ * @return type 
+ */
+function commerce_braintree_customer_delete($cid) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  //delete customer by id
+  $result = Braintree_Customer::delete($cid);
+  return $result;
+}
+
+/**
+ * apply customer to plan by token and plan ID
+ * @param type $token
+ * @param type $plan_id
+ * @return type 
+ */
+function commerce_braintree_subscription_create($token, $plan_id) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  $result = Braintree_Subscription::create(array(
+    'paymentMethodToken' => $token,
+    'planId' => $plan_id
+  ));
+  return $result;
+}
+
+/**
+ * cancel customer out plan
+ * @param type $subscription_id
+ * @return type 
+ */
+function commerce_braintree_subscription_cancel($subscription_id) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  $result = Braintree_Subscription::cancel($subscription_id);
+  return $result;
+}
+
