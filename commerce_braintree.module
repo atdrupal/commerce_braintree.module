@@ -1,25 +1,8 @@
 <?php
 
-
-//require_once libraries_get_path("braintree") . "/lib/Braintree.php";
-
-//define('LB_PATH', libraries_get_path("braintree"));
-
-
+include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
 define('COMMERCE_BRAINTREE_LIVE', 'live');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
-// module_load_include('.module', 'libraries', 'libraries');
-//commerce_braintree_load();
-//function commerce_braintree_load() {
-//  $file = './' . libraries_get_path(libraries_get_path) . "/lib/Braintree.phpe";
-//
-//  if (is_file($file)) {
-//    require_once $file;
-//  }
-//  
-//  //dsm($base_path . libraries_get_path("braintree") . "/lib/Braintree.php");
-//}
-
 
 /**
  * Implements hook_commerce_payment_method_info().
@@ -158,8 +141,8 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
 //  dsm($pane_form);
 //  dsm($pane_values);
 //  dsm($order);
-//  dsm($charge);
- 
+  //dsm($charge);
+  //return FALSE;
   
   // Determine the credit card type if possible for use in later code.
   if (!empty($pane_values['credit_card']['number'])) {
@@ -171,11 +154,6 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   if ($charge['amount'] == 0) {
     // Prevent the transaction except under limited circumstances.
     $prevent_transaction = TRUE;
-
-    // Allow 0 amount authorizations on Visa cards.
-    if ($payment_method['settings']['txn_type'] == COMMERCE_CREDIT_AUTH_ONLY && $card_type == 'visa') {
-      $prevent_transaction = FALSE;
-    }
 
     // If the transaction should still be prevented...
     if ($prevent_transaction) {
@@ -195,14 +173,10 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
 
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
-  // Get the default transaction type from the payment method settings.
-//  $txn_type = $payment_method['settings']['txn_type'];
-
-  
   // Prepare the billing address for use in the request.
   if ($order_wrapper->commerce_customer_billing->value()){
     $billing_address = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
-
+    //dsm($billing_address);return FALSE;
     if (empty($billing_address['first_name'])) {
       $name_parts = explode(' ', $billing_address['name_line']);
       $billing_address['first_name'] = array_shift($name_parts);
@@ -231,22 +205,20 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   $customer_info = array(
     // Customer Information
     'email' => substr($order->mail, 0, 255),
-    'id' => substr($order->uid, 0, 20),
+//    'id' => substr($order->uid, 0, 20),
     'creditCard' => $credit_card
   );
-  dsm($customer_info);
   
+  dsm($customer_info);
   //create customer
-  $customer = Braintree_Customer::create($customer_info);
-  dsm($customer);
+  $customer = commerce_braintree_customer_create($customer_info);
+  //$customer = commerce_braintree_customer_get_all();
+  dsm($customer->customer->id);
   //if (!$customer->success)    return FALSE;
 
-  //create 
-  $subscription = Braintree_Subscription::create(array(
-    'paymentMethodToken' => 'a_token',
-    'planId' => 'teachers'
-  ));
-  dsm($subscription);
+  return FALSE;
+  $subscription = commerce_braintree_subscription_create($customer->id, 'teachers');
+          
   
 }
 
@@ -271,7 +243,7 @@ function commerce_braintree_initialize_library() {
  * @param stdClass $customer
  * @return type 
  */
-function commerce_braintree_customer_create(stdClass $customer) {
+function commerce_braintree_customer_create($customer) {
   //Initializes the Braintree Library
   commerce_braintree_initialize_library();
   //create customer
@@ -280,7 +252,7 @@ function commerce_braintree_customer_create(stdClass $customer) {
 }
 
 /**
- * update customer info
+ * update customer info-
  * @param type $cid
  * @param array $info
  * @return type 
@@ -304,6 +276,17 @@ function commerce_braintree_customer_get(string $cid) {
   //create customer
   $customer = Braintree_Customer::find($cid);
   return $customer;
+}
+/**
+ * get all customer save in Vault
+ * @return type 
+ */
+function commerce_braintree_customer_get_all() {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  //create customer
+  $customers = Braintree_Customer::all();
+  return $customers;
 }
 
 /**

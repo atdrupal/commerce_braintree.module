@@ -1,5 +1,6 @@
 <?php
 
+
 function commerce_braintree_requirements($phase) {
   $requirements = array();
   // Ensure translations do not break at install time
