@@ -3,6 +3,7 @@
 include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
 define('COMMERCE_BRAINTREE_LIVE', 'live');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
+define('planId', 'master');
 
 /**
  * Implements hook_commerce_payment_method_info().
@@ -133,6 +134,18 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
 
 
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
+  //$a = commerce_braintree_subscription_get_by_token("5ww77");
+  $a = commerce_braintree_customer_get(3255606);
+  //$a = commerce_braintree_customer_get_all();
+  //dsm($a->subscriptions);
+  $b = $a->creditCards[0]->subscriptions;//[0]->_attributes['subscriptions'];
+  foreach ($b as $c) {
+    dsm($c->status);
+  }
+  dsm($b);
+  //print_r($a);
+  //var_dump($a);
+  return FALSE;
   if (!empty($pane_values['credit_card']['number'])) {
     module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
     $card_type = commerce_payment_validate_credit_card_type($pane_values['credit_card']['number'], array_keys(commerce_payment_credit_card_types()));
@@ -213,8 +226,20 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   } else {
     $token = $result->creditCards[0]->token;
   }
-
-  $subscription = commerce_braintree_subscription_create($token, 'teachers');  
+  
+  $sub = commerce_braintree_subscription_get_by_cid($order->uid);
+  if (!$sub) {
+    commerce_braintree_subscription_create($token, planId);
+    
+  } else {
+    if (planId != $sub) {
+      commerce_braintree_subscription_cancel($token, $sub);
+      commerce_braintree_subscription_create($token, planId);
+    } else {
+      drupal_set_message(t('You are subscripting to this Plan.'), 'error');
+      return FALSE;
+    }
+  }
 }
 
 
@@ -342,3 +367,23 @@ function commerce_braintree_subscription_cancel($subscription_id) {
   return $result;
 }
 
+
+/**
+ * 
+ * @param type $cid
+ */
+function commerce_braintree_subscription_get_by_cid($cid, &$plan_id = NULL) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  $customer = commerce_braintree_customer_get($cid);
+  
+  if (!isset($customer->creditCards[0]->subscriptions)) return FALSE;
+  
+  $subscriptions = $customer->creditCards[0]->subscriptions;
+  foreach ($subscriptions as $subscription) {
+    if (strcmp($subscription->status,"Canceled") != 0) {
+      return $subscription->planId;
+    }
+  }
+  return FALSE;
+}
