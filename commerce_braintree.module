@@ -5,6 +5,39 @@ define('COMMERCE_BRAINTREE_LIVE', 'live');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
 define('planId', 'master');
 
+function commerce_braintree_menu() {
+  $items = array();
+  $link = variable_get('commerce_braintree_link');
+  
+  
+  
+  // Define an path that trigger from braintree Webhooks
+  $items['admin/config/services/commerce-braintree'] = array(
+    'title' => t('Commerce braintree setting'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_braintree_webhooks_link_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'commerce_braintree.admin.inc',
+  );
+  
+  if (!isset($link)) {
+    return $items;
+  }
+  // Define an path that trigger from braintree Webhooks
+  $items[$link] = array(
+    'title' => t('Trigger occurs form braintree'),
+    'page callback' => 'commerce_braintree_hooks',
+    //'page arguments' => array(2),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'commerce_braintree.admin.inc',
+  );
+  dsm($items);
+  return $items;
+  
+}
+
 /**
  * Implements hook_commerce_payment_method_info().
  */
@@ -134,18 +167,7 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
 
 
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  //$a = commerce_braintree_subscription_get_by_token("5ww77");
-  $a = commerce_braintree_customer_get(3255606);
-  //$a = commerce_braintree_customer_get_all();
-  //dsm($a->subscriptions);
-  $b = $a->creditCards[0]->subscriptions;//[0]->_attributes['subscriptions'];
-  foreach ($b as $c) {
-    dsm($c->status);
-  }
-  dsm($b);
-  //print_r($a);
-  //var_dump($a);
-  return FALSE;
+
   if (!empty($pane_values['credit_card']['number'])) {
     module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
     $card_type = commerce_payment_validate_credit_card_type($pane_values['credit_card']['number'], array_keys(commerce_payment_credit_card_types()));
