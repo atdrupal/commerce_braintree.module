@@ -133,18 +133,6 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
 
 
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  
-  
-//  dsm('You just enter submit checkout!thank');
-//  
-//  dsm($payment_method);
-//  dsm($pane_form);
-//  dsm($pane_values);
-//  dsm($order);
-  //dsm($charge);
-  //return FALSE;
-  
-  // Determine the credit card type if possible for use in later code.
   if (!empty($pane_values['credit_card']['number'])) {
     module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
     $card_type = commerce_payment_validate_credit_card_type($pane_values['credit_card']['number'], array_keys(commerce_payment_credit_card_types()));
@@ -175,22 +163,23 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
 
   // Prepare the billing address for use in the request.
   if ($order_wrapper->commerce_customer_billing->value()){
-    $billing_address = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
-    //dsm($billing_address);return FALSE;
-    if (empty($billing_address['first_name'])) {
-      $name_parts = explode(' ', $billing_address['name_line']);
-      $billing_address['first_name'] = array_shift($name_parts);
-      $billing_address['last_name'] = implode(' ', $name_parts);
+    $billing_address_get = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
+    if (empty($billing_address_get['first_name'])) {
+      $name_parts = explode(' ', $billing_address_get['name_line']);
+      $billing_address_get['first_name'] = array_shift($name_parts);
+      $billing_address_get['last_name'] = implode(' ', $name_parts);
     }
 
     $billing_address = array(
       // Customer Billing Address
-      'firstName' => substr($billing_address['first_name'], 0, 50),
-      'lastName' => substr($billing_address['last_name'], 0, 50),
-      'company' => substr($billing_address['organisation_name'], 0, 50),
-      'streetAddress' => substr($billing_address['thoroughfare'], 0, 60),
-      'postalCode' => substr($billing_address['postal_code'], 0, 20),
-      'countryCodeAlpha2' => $billing_address['country'],
+      'firstName' => substr($billing_address_get['first_name'], 0, 50),
+      'lastName' => substr($billing_address_get['last_name'], 0, 50),
+      'company' => substr($billing_address_get['organisation_name'], 0, 50),
+      'streetAddress' => substr($billing_address_get['thoroughfare'], 0, 60),
+      'extendedAddress' => substr($billing_address_get['premise'], 0, 60),
+      'postalCode' => substr($billing_address_get['postal_code'], 0, 20),
+      'countryCodeAlpha2' => $billing_address_get['country'],
+      'locality' => $billing_address_get['locality'],
     );
   }
   else {
@@ -199,27 +188,33 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   $credit_card = array(
     'number' => $pane_values['credit_card']['number'],
     'expirationDate' => $pane_values['credit_card']['exp_month'] . '/' .  $pane_values['credit_card']['exp_year'],
-    'billingAddress' => $billing_address
+    'billingAddress' => $billing_address,
+    'options' => array(
+            'verifyCard' => true
+     )
+    
   );
+  
   // Add additional transaction invormation to the request array.
-  $customer_info = array(
+  $customer = array(
     // Customer Information
+    'firstName' => $billing_address['firstName'],
+    'lastName' => $billing_address['lastName'],
     'email' => substr($order->mail, 0, 255),
-//    'id' => substr($order->uid, 0, 20),
-    'creditCard' => $credit_card
+    'id' => $order->uid,
+    'creditCard' => $credit_card,
   );
-  
-  dsm($customer_info);
-  //create customer
-  $customer = commerce_braintree_customer_create($customer_info);
-  //$customer = commerce_braintree_customer_get_all();
-  dsm($customer->customer->id);
-  //if (!$customer->success)    return FALSE;
+  //check exsiting customer 
+  $result = commerce_braintree_customer_get($order->uid);
+  if (!$result) {
+    $result = commerce_braintree_customer_create($customer);
+    if (!$result->success)    return FALSE;
+    $token = $result->customer->creditCards[0]->token;
+  } else {
+    $token = $result->creditCards[0]->token;
+  }
 
-  return FALSE;
-  $subscription = commerce_braintree_subscription_create($customer->id, 'teachers');
-          
-  
+  $subscription = commerce_braintree_subscription_create($token, 'teachers');  
 }
 
 
@@ -270,11 +265,15 @@ function commerce_braintree_customer_update($cid, array $info) {
  * @param type $cid
  * @return type 
  */
-function commerce_braintree_customer_get(string $cid) {
+function commerce_braintree_customer_get($cid) {
   //Initializes the Braintree Library
   commerce_braintree_initialize_library();
-  //create customer
-  $customer = Braintree_Customer::find($cid);
+  try {
+    $customer = Braintree_Customer::find($cid);
+  } catch(Exception $e) {
+    //we have a not found exception!
+    $customer = FALSE;
+  }
   return $customer;
 }
 /**
@@ -301,6 +300,19 @@ function commerce_braintree_customer_delete($cid) {
   $result = Braintree_Customer::delete($cid);
   return $result;
 }
+
+/**
+ * 
+ * @return type
+ */
+function commerce_braintree_customer_delete_all() {
+  //Initializes the Braintree Library
+  $customers = commerce_braintree_customer_get_all();
+  foreach ($customers->_ids as $cid) {
+    commerce_braintree_customer_delete($cid);
+  }
+}
+
 
 /**
  * apply customer to plan by token and plan ID
