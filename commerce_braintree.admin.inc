@@ -1,5 +1,7 @@
 <?php 
 
+include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
+
 /**
  * define form setting url receive trigger from braintree
  * @return string
@@ -32,13 +34,13 @@ function commerce_braintree_webhooks_link_form_submit(&$form_state) {
 
 
 function commerce_braintree_hooks() {
-  
+  commerce_braintree_initialize_library();
   $bt_challenge = "";
   if (isset($_GET['bt_challenge'])) {
     $bt_challenge = $_GET['bt_challenge'];
   }
   if (isset($bt_challenge) && $bt_challenge != "") {
-    //echo Braintree_WebhookNotification::verify($bt_challenge);
+    echo Braintree_WebhookNotification::verify($bt_challenge);
   }
   return "<h1>braintree trigger</h1><div>" . $bt_challenge . "</div>";
 }
