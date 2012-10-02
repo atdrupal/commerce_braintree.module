@@ -29,8 +29,8 @@ function commerce_braintree_menu() {
     'title' => t('Trigger occurs form braintree'),
     'page callback' => 'commerce_braintree_hooks',
     //'page arguments' => array(2),
-    'access arguments' => TRUE,
-    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
     'file' => 'commerce_braintree.admin.inc',
   );
   dsm($items);
