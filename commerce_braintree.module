@@ -37,7 +37,6 @@ function commerce_braintree_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'commerce_braintree.admin.inc',
   );
-  dsm($items);
   return $items;
   
 }

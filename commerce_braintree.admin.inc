@@ -48,7 +48,7 @@ function commerce_braintree_hooks() {
   $bt_payload_param   = $_POST["bt_payload"];
   $bt_signature_param = $_POST["bt_signature"];
   
-  if (isset($bt_signature_param) || isset($bt_signature_param))    return FALSE;
+  if (!isset($bt_signature_param) || !isset($bt_signature_param))    return FALSE;
   
   $webhookNotification = Braintree_WebhookNotification::parse($bt_signature_param, $bt_payload_param);
   
