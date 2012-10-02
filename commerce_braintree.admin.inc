@@ -42,5 +42,6 @@ function commerce_braintree_hooks() {
   if (isset($bt_challenge) && $bt_challenge != "") {
     echo Braintree_WebhookNotification::verify($bt_challenge);
   }
+  watchdog('actions', 'Commerce braintree %action .', array('%action' => $bt_challenge));
   return "<h1>braintree trigger</h1><div>" . $bt_challenge . "</div>";
 }
