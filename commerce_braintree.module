@@ -5,6 +5,10 @@ define('COMMERCE_BRAINTREE_LIVE', 'live');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
 define('planId', 'master');
 
+
+/**
+ * Implementation of hook_menu().
+ */
 function commerce_braintree_menu() {
   $items = array();
   $link = variable_get('commerce_braintree_link');
@@ -323,6 +327,21 @@ function commerce_braintree_customer_get($cid) {
   }
   return $customer;
 }
+
+function commerce_braintree_customer_get_by_token($token) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  try {
+    $customer = Braintree_Customer::search(array(
+      Braintree_CustomerSearch::paymentMethodToken()->is($token)
+    ));
+  } catch(Exception $e) {
+    //we have a not found exception!
+    $customer = FALSE;
+  }
+  return $customer;
+}
+
 /**
  * get all customer save in Vault
  * @return type 
@@ -408,4 +427,11 @@ function commerce_braintree_subscription_get_by_cid($cid, &$plan_id = NULL) {
     }
   }
   return FALSE;
+}
+
+
+function commerce_braintree_subscription_get_by_id($sid) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  return Braintree_Subscription::find($sid);
 }
