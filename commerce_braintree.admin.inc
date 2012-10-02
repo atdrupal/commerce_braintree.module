@@ -44,5 +44,5 @@ function commerce_braintree_hooks() {
     echo $verify;
   }
   watchdog('actions', 'Commerce braintree %action .', array('%action' => $verify));
-  return "<h1>braintree trigger</h1><div>" . $bt_challenge .  "</div>";
+  return $verify;
 }
