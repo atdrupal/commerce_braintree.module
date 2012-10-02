@@ -4,7 +4,7 @@
  * Implementation of hook_cb_subscription_canceled().
  * Module : commerce_braintree
  */
-function commerce_braintree_example_cb_subscription_canceled($kind, $sid) {
+function commerce_braintree_example_cb_subscription_went_active($kind, $sid) {
   $sub = commerce_braintree_subscription_get_by_id($sid);
   $cus = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
   $uid = $cus->_ids[0];
