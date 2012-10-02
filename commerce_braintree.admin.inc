@@ -1,6 +1,6 @@
 <?php 
 
-include DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
+include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
 
 /**
  * define form setting url receive trigger from braintree
