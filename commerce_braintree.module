@@ -1,6 +1,6 @@
 <?php
 
-include DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
+include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
 define('COMMERCE_BRAINTREE_LIVE', 'live');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
 define('planId', 'master');
@@ -29,7 +29,7 @@ function commerce_braintree_menu() {
     'title' => t('Trigger occurs form braintree'),
     'page callback' => 'commerce_braintree_hooks',
     //'page arguments' => array(2),
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => TRUE,
     'type' => MENU_NORMAL_ITEM,
     'file' => 'commerce_braintree.admin.inc',
   );
