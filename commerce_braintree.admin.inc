@@ -42,8 +42,21 @@ function commerce_braintree_hooks() {
   if (isset($bt_challenge) && $bt_challenge != "") {
     $verify = Braintree_WebhookNotification::verify($bt_challenge);
     echo $verify;
+    exit();
   }
-  watchdog('actions', 'Commerce braintree %action .', array('%action' => $verify));
-  exit();
-  //return $verify;
+  
+  $webhookNotification = Braintree_WebhookNotification::parse(
+    bt_signature_param, bt_payload_param
+  );
+
+  $webhookNotification->kind;
+  # => "subscription_went_past_due"
+
+  $webhookNotification->timestamp;
+  # => Sun Jan 1 00:00:00 UTC 2012
+
+  $webhookNotification->subscription->id;
+  watchdog('actions', 'Commerce braintree %action .', array('%action' => $webhookNotification->kind));
+  
+  
 }
