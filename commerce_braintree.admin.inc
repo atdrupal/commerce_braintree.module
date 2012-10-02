@@ -40,26 +40,42 @@ function commerce_braintree_hooks() {
     $bt_challenge = $_GET['bt_challenge'];
   }
   if (isset($bt_challenge) && $bt_challenge != "") {
-    $verify = Braintree_WebhookNotification::verify($bt_challenge);
-    echo $verify;
-    watchdog('actions', 'Commerce braintree %action verify .', array('%action' => $verify));
+    echo Braintree_WebhookNotification::verify($bt_challenge);
+    //watchdog('actions', 'Commerce braintree %action verify .', array('%action' => $verify));
     exit();
   }
   
+  $bt_payload_param   = $_POST["bt_payload"];
   $bt_signature_param = $_POST["bt_signature"];
-  $bt_payload_param = $_POST["bt_payload"];
-  $webhookNotification = Braintree_WebhookNotification::parse(
-    $bt_signature_param, $bt_payload_param
-  );
   
-  $webhookNotification->kind;
-  # => "subscription_went_past_due"
-
-  $webhookNotification->timestamp;
-  # => Sun Jan 1 00:00:00 UTC 2012
-
-  $webhookNotification->subscription->id;
+  if (isset($bt_signature_param) || isset($bt_signature_param))    return FALSE;
+  
+  $webhookNotification = Braintree_WebhookNotification::parse($bt_signature_param, $bt_payload_param);
+  
+  $kind = $webhookNotification->kind;
+  $subscription_id = $webhookNotification->subscription->id;
+  switch ($kind) {
+    case Braintree_WebhookNotification::SUBSCRIPTION_CANCELED:
+      module_invoke_all('cb_subscription_canceled', $kind, $subscription_id);
+      break;
+    case Braintree_WebhookNotification::SUBSCRIPTION_CHARGED_SUCCESSFULLY:
+      module_invoke_all('cb_subscription_charged_successfully', $kind, $subscription_id);
+      break;
+    case Braintree_WebhookNotification::SUBSCRIPTION_CHARGED_UNSUCCESSFULLY:
+      module_invoke_all('cb_subscription_charged_unsuccessfully', $kind, $subscription_id);
+      break;
+    case Braintree_WebhookNotification::SUBSCRIPTION_EXPIRED:
+      module_invoke_all('cb_subscription_expired', $kind, $subscription_id);
+      break;
+    case Braintree_WebhookNotification::SUBSCRIPTION_TRIAL_ENDED:
+      module_invoke_all('cb_subscription_trial_ended', $kind, $subscription_id);
+      break;
+    case Braintree_WebhookNotification::SUBSCRIPTION_WENT_ACTIVE:
+      module_invoke_all('cb_subscription_went_active', $kind, $subscription_id);
+      break;
+    case Braintree_WebhookNotification::SUBSCRIPTION_WENT_PAST_DUE:
+      module_invoke_all('cb_subscription_went_past_due', $kind, $subscription_id);
+      break;
+  }
   watchdog('actions', 'Commerce braintree %action .', array('%action' => $webhookNotification->kind));
-  
-  
 }
