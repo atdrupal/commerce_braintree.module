@@ -40,8 +40,9 @@ function commerce_braintree_hooks() {
     $bt_challenge = $_GET['bt_challenge'];
   }
   if (isset($bt_challenge) && $bt_challenge != "") {
-    echo Braintree_WebhookNotification::verify($bt_challenge);
+    $verify = Braintree_WebhookNotification::verify($bt_challenge);
+    echo $verify;
   }
-  watchdog('actions', 'Commerce braintree %action .', array('%action' => $bt_challenge));
-  return "<h1>braintree trigger</h1><div>" . $bt_challenge . "</div>";
+  watchdog('actions', 'Commerce braintree %action .', array('%action' => $verify));
+  return "<h1>braintree trigger</h1><div>" . $bt_challenge .  "</div>";
 }
