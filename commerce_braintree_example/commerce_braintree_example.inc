@@ -198,7 +198,7 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   $customer['firstName']  = $form_state['values']['c_first_name'];
   $customer['lastName']   = $form_state['values']['c_last_name'];
   $customer['company']    = $form_state['values']['c_company'];
-  $customer['email']      = $form_state['values']['c_emai'];
+  $customer['email']      = $form_state['values']['c_email'];
   $customer['phone']      = $form_state['values']['c_phone'];
   $customer['fax']        = $form_state['values']['c_fax'];
   $customer['creditCard'] = $creditcard;
