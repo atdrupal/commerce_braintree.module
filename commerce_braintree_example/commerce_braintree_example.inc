@@ -86,7 +86,7 @@ function commerce_braintree_example_form_customer() {
     '#default_value' => isset($creditcard->maskedNumber) ? $creditcard->maskedNumber : '',
     '#required' => TRUE,
   );
-  $form['payment_method']['ca_exp_date '] = array(
+  $form['payment_method']['ca_exp_date'] = array(
     '#type' => 'textfield',
     '#title' => t('Expiration Date '),
     '#description' => t('Expiration Date (MM/YYYY)'),
