@@ -443,7 +443,7 @@ function commerce_braintree_planid_test($order) {
   $op = commerce_product_load($pid);
   
   
-  dsm($op->field_planid‎);
+  dsm($op['field_planid‎']);
   //$plan_id = $op->field_planid‎ ['und']['0']['value'];
   return $plan_id;
 }
