@@ -177,29 +177,29 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   global $user;
   $is_new = variable_get('commerce_braintree_example_is_new', FALSE);
   //billing address
-  $billing_address['firstName']       = $form_state['values ']['ad_first_name'];
-  $billing_address['lastName']        = $form_state['values ']['ad_last_name'];
-  $billing_address['company']         = $form_state['values ']['ad_company'];
-  $billing_address['streetAddress']   = $form_state['values ']['ad_street_address'];
-  $billing_address['extendedAddress'] = $form_state['values ']['ad_extended_address'];
-  $billing_address['locality']        = $form_state['values ']['ad_city'];
-  $billing_address['region']          = $form_state['values ']['ad_state'];
-  $billing_address['postalCode']      = $form_state['values ']['ad_postal_code'];
-  $billing_address['countryName']     = $form_state['values ']['ad_country_name'];
+  $billing_address['firstName']       = $form_state['values']['ad_first_name'];
+  $billing_address['lastName']        = $form_state['values']['ad_last_name'];
+  $billing_address['company']         = $form_state['values']['ad_company'];
+  $billing_address['streetAddress']   = $form_state['values']['ad_street_address'];
+  $billing_address['extendedAddress'] = $form_state['values']['ad_extended_address'];
+  $billing_address['locality']        = $form_state['values']['ad_city'];
+  $billing_address['region']          = $form_state['values']['ad_state'];
+  $billing_address['postalCode']      = $form_state['values']['ad_postal_code'];
+  $billing_address['countryName']     = $form_state['values']['ad_country_name'];
   
   //creditcard
-  $creditcard['cardholderName'] = $form_state['values ']['ca_cardholder_name'];
-  $creditcard['expirationDate'] = $form_state['values ']['ca_exp_date'];
+  $creditcard['cardholderName'] = $form_state['values']['ca_cardholder_name'];
+  $creditcard['expirationDate'] = $form_state['values']['ca_exp_date'];
   $creditcard['billingAddress'] = $billing_address;
   $creditcard['options']        = array('verifyCard' => TRUE);
   
   //customer
-  $customer['firstName']  = $form_state['values ']['c_first_name '];
-  $customer['lastName']   = $form_state['values ']['c_last_name'];
-  $customer['company']    = $form_state['values ']['c_company'];
-  $customer['email']      = $form_state['values ']['c_emai'];
-  $customer['phone']      = $form_state['values ']['c_phone'];
-  $customer['fax']        = $form_state['values ']['c_fax'];
+  $customer['firstName']  = $form_state['values']['c_first_name'];
+  $customer['lastName']   = $form_state['values']['c_last_name'];
+  $customer['company']    = $form_state['values']['c_company'];
+  $customer['email']      = $form_state['values']['c_emai'];
+  $customer['phone']      = $form_state['values']['c_phone'];
+  $customer['fax']        = $form_state['values']['c_fax'];
   $customer['creditCard'] = $creditcard;
   if ($is_new) {
     $result = commerce_braintree_customer_create($customer);
