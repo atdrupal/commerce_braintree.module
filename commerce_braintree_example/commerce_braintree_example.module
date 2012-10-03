@@ -22,3 +22,23 @@ function commerce_braintree_example_cb_subscription_charged_successfully($kind, 
     ->execute();
 }
 
+function commerce_braintree_example_menu() {
+  $items = array();
+  $items['user/%user/customer'] = array(
+    'title' => 'Customer Braintree',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_braintree_example_form_customer'),
+    'access arguments' =>  array('access content'), 
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'commerce_braintree_example.inc',
+  );
+  $items['user/%user/braintre-cancel'] = array(
+    'title' => 'Cancel Braintree',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_braintree_example_form_customer_cancel'),
+    'access arguments' =>  array('access content'), 
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'commerce_braintree_example.inc',
+  );
+  return $items;
+}

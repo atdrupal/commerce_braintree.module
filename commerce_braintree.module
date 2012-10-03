@@ -1,7 +1,7 @@
 <?php
 
 include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
-define('COMMERCE_BRAINTREE_LIVE', 'live');
+define('COMMERCE_BRAINTREE_LIVE', 'production');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
 define('planId', 'master');
 
@@ -10,19 +10,10 @@ define('planId', 'master');
  */
 function commerce_braintree_menu() {
   $items = array();
-  $link = variable_get('commerce_braintree_link');
-  // Define an path that trigger from braintree Webhooks
-  $items['admin/config/services/commerce-braintree'] = array(
-    'title' => 'Commerce braintree setting',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_webhooks_link_form'),
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_NORMAL_ITEM,
-    'file' => 'commerce_braintree.admin.inc',
-  );
-  if (!isset($link)) {
-    return $items;
-  }
+  $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
+  $link = $payment['settings']['webhook_link'];
+  
+  if (!isset($link))  return $items;
   // Define an path that trigger from braintree Webhooks
   $items[$link] = array(
     'title' => 'Trigger occurs form braintree',
@@ -110,6 +101,13 @@ function commerce_braintree_settings_form($settings = NULL) {
     '#options' => commerce_payment_credit_card_types(),
     '#default_value' => $settings['card_types'],
   );
+  $form['webhook_link'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Webhook link'),
+    '#description' => t('Link is destination of braintree webhook. Ex braintree/webhook'),
+    '#default_value' => isset($settings['webhook_link']) ? $settings['webhook_link'] : '',
+    //'#required' => TRUE,
+  );
   return $form;
 }
 
@@ -146,7 +144,18 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
   }
 }
 
+/**
+ * Payment method callback: checkout form submission.
+ */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
+//  dsm($payment_method);
+//  dsm($pane_form);
+//  dsm($pane_values);
+//  return FALSE;
+//  dsm(commerce_line_item_load(50));
+  commerce_braintree_planid_test($order);
+  //dsm($order);
+  return FALSE;
   if (!empty($pane_values['credit_card']['number'])) {
     module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
     $card_type = commerce_payment_validate_credit_card_type($pane_values['credit_card']['number'], array_keys(commerce_payment_credit_card_types()));
@@ -222,13 +231,14 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   }
   
   $sub = commerce_braintree_subscription_get_by_cid($order->uid);
+  
+  
   if (!$sub) {
     commerce_braintree_subscription_create($token, planId);
-    
   } 
   else {
-    if (planId != $sub) {
-      commerce_braintree_subscription_cancel($token, $sub);
+    if (planId != $sub->planId) {
+      commerce_braintree_subscription_cancel($token, $sub->planId);
       commerce_braintree_subscription_create($token, planId);
     } 
     else {
@@ -384,17 +394,15 @@ function commerce_braintree_subscription_cancel($subscription_id) {
  * 
  * @param type $cid
  */
-function commerce_braintree_subscription_get_by_cid($cid, &$plan_id = NULL) {
+function commerce_braintree_subscription_get_by_cid($cid) {
   //Initializes the Braintree Library
   commerce_braintree_initialize_library();
   $customer = commerce_braintree_customer_get($cid);
-  
   if (!isset($customer->creditCards[0]->subscriptions)) return FALSE;
-  
   $subscriptions = $customer->creditCards[0]->subscriptions;
   foreach ($subscriptions as $subscription) {
     if (strcmp($subscription->status, "Canceled") != 0) {
-      return $subscription->planId;
+      return $subscription;
     }
   }
   return FALSE;
@@ -425,4 +433,18 @@ function commerce_braintree_plan_check($plan_id) {
     if ($plan->id == $plan_id)      return TRUE;
   }
   return FALSE;
+}
+
+
+function commerce_braintree_planid_test($order) {
+  $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
+  dsm($line_item_id);
+  
+  $line_item = commerce_line_item_load($line_item_id);
+  dsm($line_item);
+  $pid = $line_item->commerce_product['und']['0']['product_id'];
+  $product = commerce_product_load($pid);
+  dsm($product);
+  //$product->field_planid‎['']
+  return $line_item;
 }
