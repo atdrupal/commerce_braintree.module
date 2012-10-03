@@ -153,8 +153,8 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
 //  dsm($pane_values);
 //  return FALSE;
 //  dsm(commerce_line_item_load(50));
-  commerce_braintree_planid_test($order);
-  //dsm($order);
+  $planid = commerce_braintree_planid_test($order);
+  dsm($planid);
   return FALSE;
   if (!empty($pane_values['credit_card']['number'])) {
     module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
