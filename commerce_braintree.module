@@ -148,14 +148,8 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-//  dsm($payment_method);
-//  dsm($pane_form);
-//  dsm($pane_values);
-//  return FALSE;
-//  dsm(commerce_line_item_load(50));
-  $planid = commerce_braintree_planid_test($order);
-  dsm($planid);
-  return FALSE;
+  
+  $plan_id = commerce_braintree_planid_test($order);
   if (!empty($pane_values['credit_card']['number'])) {
     module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
     $card_type = commerce_payment_validate_credit_card_type($pane_values['credit_card']['number'], array_keys(commerce_payment_credit_card_types()));
@@ -234,12 +228,12 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   
   
   if (!$sub) {
-    commerce_braintree_subscription_create($token, planId);
+    commerce_braintree_subscription_create($token, $plan_id);
   } 
   else {
-    if (planId != $sub->planId) {
+    if ($plan_id != $sub->planId) {
       commerce_braintree_subscription_cancel($token, $sub->planId);
-      commerce_braintree_subscription_create($token, planId);
+      commerce_braintree_subscription_create($token, $plan_id);
     } 
     else {
       drupal_set_message(t('You are subscripting to this Plan.'), 'error');
@@ -441,8 +435,6 @@ function commerce_braintree_planid_test($order) {
   $line_item = commerce_line_item_load($line_item_id);
   $pid = $line_item->commerce_product['und']['0']['product_id'];
   $op = commerce_product_load($pid);
-  
-  //dsm($op->field_planid['und']['0']['value']);
   $plan_id = $op->field_planid['und']['0']['value'];
   return $plan_id;
 }
