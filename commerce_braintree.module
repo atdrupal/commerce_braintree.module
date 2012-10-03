@@ -232,7 +232,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   } 
   else {
     if ($plan_id != $sub->planId) {
-      commerce_braintree_subscription_cancel($token, $sub->planId);
+      commerce_braintree_subscription_cancel($sub->id);
       commerce_braintree_subscription_create($token, $plan_id);
     } 
     else {
