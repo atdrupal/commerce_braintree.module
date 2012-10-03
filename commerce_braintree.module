@@ -438,13 +438,9 @@ function commerce_braintree_plan_check($plan_id) {
 
 function commerce_braintree_planid_test($order) {
   $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
-  dsm($line_item_id);
-  
   $line_item = commerce_line_item_load($line_item_id);
-  dsm($line_item);
   $pid = $line_item->commerce_product['und']['0']['product_id'];
   $product = commerce_product_load($pid);
-  dsm($product);
-  //$product->field_planid‎['']
-  return $line_item;
+  $plan_id = $product->field_planid‎['und']['0']['value'];
+  return $plan_id;
 }
