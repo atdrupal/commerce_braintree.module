@@ -23,9 +23,9 @@ function commerce_braintree_example_form_customer() {
     variable_set('commerce_braintree_example_is_new', TRUE);
   }
   
-  dsm($customer);
-  dsm($creditcard);
-  dsm($billing_address);
+//  dsm($customer);
+//  dsm($creditcard);
+//  dsm($billing_address);
 
   
   $form = array();
@@ -175,6 +175,7 @@ function commerce_braintree_example_form_customer_validate($form, &$form_state) 
  */
 function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   global $user;
+  dsm($form_state);
   $is_new = variable_get('commerce_braintree_example_is_new', FALSE);
   //billing address
   $billing_address['firstName']       = $form_state['values']['ad_first_name'];
