@@ -22,8 +22,18 @@ function commerce_braintree_example_form_customer() {
     $is_new = TRUE;
     variable_set('commerce_braintree_example_is_new', TRUE);
   }
-  
-//  dsm($customer);
+//    commerce_braintree_initialize_library();
+//    $updateResult = Braintree_CreditCard::update(
+//    $creditcard->token,
+//      array(
+//        'number' => '4005519200000004',
+//        'expirationDate' => '07/14'
+//            )
+//    );
+//    dsm($updateResult);return FALSE;
+//    $customer = commerce_braintree_creditcard_get_by_token($creditcard->token);
+//    
+//    dsm($customer);return FALSE;
 //  dsm($creditcard);
 //  dsm($billing_address);
 
@@ -175,7 +185,7 @@ function commerce_braintree_example_form_customer_validate($form, &$form_state) 
  */
 function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   global $user;
-  dsm($form_state);
+//  dsm($form_state);
   $is_new = variable_get('commerce_braintree_example_is_new', FALSE);
   //billing address
   $billing_address['firstName']       = $form_state['values']['ad_first_name'];
@@ -189,10 +199,11 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   $billing_address['countryName']     = $form_state['values']['ad_country_name'];
   
   //creditcard
-  $creditcard['cardholderName'] = $form_state['values']['ca_cardholder_name'];
-  $creditcard['expirationDate'] = $form_state['values']['ca_exp_date'];
-  $creditcard['billingAddress'] = $billing_address;
-  $creditcard['options']        = array('verifyCard' => TRUE);
+//  $creditcard['cardholderName'] = $form_state['values']['ca_cardholder_name'];
+//  $creditcard['number'] = $form_state['values']['ca_card_number'];
+//  $creditcard['expirationDate'] = $form_state['values']['ca_exp_date'];
+//  $creditcard['billingAddress'] = $billing_address;
+//  $creditcard['options']        = array('verifyCard' => TRUE, 'updateExistingToken' => $form_state['values']['ca_token']);
   
   //customer
   $customer['firstName']  = $form_state['values']['c_first_name'];
@@ -201,7 +212,8 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   $customer['email']      = $form_state['values']['c_email'];
   $customer['phone']      = $form_state['values']['c_phone'];
   $customer['fax']        = $form_state['values']['c_fax'];
-  $customer['creditCard'] = $creditcard;
+  //$customer['creditCard'] = $creditcard;
+//  dsm($customer);
   if ($is_new) {
     $result = commerce_braintree_customer_create($customer);
     if ($result->success) {
@@ -212,7 +224,12 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
     }
   }
   else {
-    commerce_braintree_customer_update($user->uid,$customer);
+    $result = commerce_braintree_customer_update($user->uid,$customer);
+    dsm($result);
+    $creditcard = $result->customer->creditCards[0];
+    //$billing_address = $result->customer->billingAddress;
+//    dsm($creditcard);
+//    dsm($billing_address);
   }
   
   

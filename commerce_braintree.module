@@ -429,7 +429,24 @@ function commerce_braintree_plan_check($plan_id) {
   return FALSE;
 }
 
+function commerce_braintree_creditcard_get_by_token($token) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  try {
+   $creditCard = Braintree_CreditCard::find($token);
+  } catch (Exception $e) {
+    //we have a not found exception!
+    $creditCard = FALSE;
+  }
+  return $creditCard;
+}
 
+
+/**
+ * 
+ * @param type $order
+ * @return type
+ */
 function commerce_braintree_planid_test($order) {
   $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
   $line_item = commerce_line_item_load($line_item_id);
@@ -437,4 +454,23 @@ function commerce_braintree_planid_test($order) {
   $op = commerce_product_load($pid);
   $plan_id = $op->field_planid['und']['0']['value'];
   return $plan_id;
+}
+
+
+/**
+ * Implements hook_field_attach_validate()
+ * validate field plan id
+ */
+function commerce_braintree_field_attach_validate($entity_type, $entity, &$errors) {
+  if ($entity_type != "commerce_product"){
+    return;
+  }
+  $plan_id = $entity->field_planid['und']['0']['value'];
+  $found = commerce_braintree_plan_check($plan_id);
+  if (!$found) {
+    $errors['field_planid']['und']['0'][] = array(
+      'error' => "not found",
+      'message' => "Not found plan id in braintree server",
+    );
+  }
 }
