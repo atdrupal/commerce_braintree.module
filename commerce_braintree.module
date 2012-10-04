@@ -3,7 +3,6 @@
 include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
 define('COMMERCE_BRAINTREE_LIVE', 'production');
 define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
-define('planId', 'master');
 
 /**
  * Implementation of hook_menu().
@@ -217,16 +216,15 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   $result = commerce_braintree_customer_get($order->uid);
   if (!$result) {
     $result = commerce_braintree_customer_create($customer);
-    if (!$result->success)    return FALSE;
+    if (!$result->success) {
+      return FALSE;
+    }
     $token = $result->customer->creditCards[0]->token;
   } 
   else {
     $token = $result->creditCards[0]->token;
   }
-  
   $sub = commerce_braintree_subscription_get_by_cid($order->uid);
-  
-  
   if (!$sub) {
     commerce_braintree_subscription_create($token, $plan_id);
   } 
