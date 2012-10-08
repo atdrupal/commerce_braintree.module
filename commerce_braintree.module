@@ -147,7 +147,7 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  dsm($payment_method);return FALSE;
+  //dsm($payment_method);return FALSE;
   $message = "";
   $plan_id = commerce_braintree_planid_get($order);
   if (!empty($pane_values['credit_card']['number'])) {
