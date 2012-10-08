@@ -49,3 +49,13 @@ function commerce_braintree_hooks() {
   watchdog('actions', 'Commerce braintree %action .', array('%action' => $webhookNotification->kind));
 }
 
+
+//function commerce_braintree_page_cancel($plan_id , $uid) {
+function commerce_braintree_page_cancel($uid=1) {
+  $customer = commerce_braintree_customer_get($uid);
+  dsm($customer);
+  return "<h6>hello cancel<h6>";
+  $sub = commerce_braintree_subscription_get_by_cid($uid);
+  commerce_braintree_subscription_cancel($sub->id);
+  //commerce_braintree_subscription_cancel($subscription_id);
+}

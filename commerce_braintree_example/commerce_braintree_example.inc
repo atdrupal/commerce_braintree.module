@@ -262,6 +262,7 @@ function commerce_braintree_example_form_customer_cancel() {
 
 function commerce_braintree_example_form_customer_cancel_submit($form, &$form_state) {
   global $user;
+  
   $sub = commerce_braintree_subscription_get_by_cid($user->uid);
   commerce_braintree_subscription_cancel($sub->id);
   drupal_set_message(t("cancel success"),"status");

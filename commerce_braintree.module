@@ -11,6 +11,17 @@ function commerce_braintree_menu() {
   $items = array();
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
   $link = $payment['settings']['webhook_link'];
+  //%planid/user/%uid
+  $items['braintree/plan/%planid/cancel'] = array(
+    'title' => 'Cancel braintree recurring billing',
+    'page callback' => 'commerce_braintree_page_cancel',
+    'page arguments' => array(2),//,6),
+//    'access callback' => 'commerce_braintree_page_cancel_access',
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'commerce_braintree.admin.inc',
+  );
+  return $items;
   
   if (!isset($link))  return $items;
   // Define an path that trigger from braintree Webhooks
@@ -22,6 +33,32 @@ function commerce_braintree_menu() {
     'file' => 'commerce_braintree.admin.inc',
   );
   return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function commerce_braintree_permission() {
+  return array(
+    'cancel any user' => array(
+      'title' => t('Cancel any user'), 
+      'description' => t('Perform cancel any user.'),
+    ),
+    'cancel own user' => array(
+      'title' => t('Cancel own user'), 
+      'description' => t('Perform cancel own user.'),
+    ),
+  );
+}
+function commerce_braintree_page_cancel_access($uid){
+  global $user;
+  if (user_access('cancel any user')) {
+    return TRUE;
+  }
+  if ($user->uid == $uid) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
@@ -522,9 +559,4 @@ function commerce_braintree_transaction_status($sub_status) {
     case PENDING:
       return COMMERCE_PAYMENT_STATUS_PENDING;
   }
-}
-
-
-function commerce_braintree_form_alter(&$form, &$form_state, $form_id){
-  dsm($form);
 }
