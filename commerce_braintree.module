@@ -8,24 +8,23 @@ define('COMMERCE_BRAINTREE_SANBOX', 'sandbox');
  * Implementation of hook_menu().
  */
 function commerce_braintree_menu() {
+  
   $items = array();
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
-  $link = $payment['settings']['webhook_link'];
   //%planid/user/%uid
-  $items['braintree/plan/%planid/cancel'] = array(
+  $items['braintree/cancel'] = array(
     'title' => 'Cancel braintree recurring billing',
+    //'load arguments' => array(2,3),
     'page callback' => 'commerce_braintree_page_cancel',
-    'page arguments' => array(2),//,6),
+    //'page arguments' => array(2,3),
 //    'access callback' => 'commerce_braintree_page_cancel_access',
     'access arguments' => array('access content'), 
     'type' => MENU_CALLBACK,
     'file' => 'commerce_braintree.admin.inc',
   );
-  return $items;
-  
-  if (!isset($link))  return $items;
+  if (!isset($payment['settings']['webhook_link']))  return $items;
   // Define an path that trigger from braintree Webhooks
-  $items[$link] = array(
+  $items[$payment['settings']['webhook_link']] = array(
     'title' => 'Trigger occurs form braintree',
     'page callback' => 'commerce_braintree_hooks',
     'access arguments' => array('access content'), 
@@ -560,3 +559,10 @@ function commerce_braintree_transaction_status($sub_status) {
       return COMMERCE_PAYMENT_STATUS_PENDING;
   }
 }
+
+//function commerce_braintree_plan_load($plan_id, $uid) {
+//  dsm($plan_id);
+//  dsm($uid);
+//  return $uid;
+//load arguments}
+  

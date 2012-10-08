@@ -51,9 +51,11 @@ function commerce_braintree_hooks() {
 
 
 //function commerce_braintree_page_cancel($plan_id , $uid) {
-function commerce_braintree_page_cancel($uid=1) {
+function commerce_braintree_page_cancel() {
+  $plan = arg(2);
+  $uid = arg(3);
   $customer = commerce_braintree_customer_get($uid);
-  dsm($customer);
+  dsm($customer->creditCards[0]);
   return "<h6>hello cancel<h6>";
   $sub = commerce_braintree_subscription_get_by_cid($uid);
   commerce_braintree_subscription_cancel($sub->id);
