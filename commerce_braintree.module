@@ -31,7 +31,7 @@ function commerce_braintree_commerce_payment_method_info() {
   $payment_methods = array();
   $payment_methods['braintree'] = array(
     'base' => 'commerce_braintree',
-    'title' => t('Braintree'),
+    'title' => t('Braintree - Recurring Billing'),
     'short_title' => t('Braintree'),
     'display_title' => t('Braintree'),
     'description' => t('Braintree Website Payments Pro'),
