@@ -5,12 +5,24 @@
  * Module : commerce_braintree
  */
 function commerce_braintree_example_cb_subscription_went_active($kind, $sid) {
-  $sub = commerce_braintree_subscription_get_by_id($sid);
-  $cus = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
-  $uid = $cus->_ids[0];
-  db_insert('users_roles')
-    ->fields(array('uid' => $uid, 'rid' => 3))
-    ->execute();
+  
+  $sub    = commerce_braintree_subscription_get_by_id($sid);
+  $cus    = commerce_braintree_customer_get_by_token($sub->token);
+  $orders = commerce_braintree_get_orders_by_uid($cus);
+  foreach ($orders as $id) {
+    $order = commerce_order_load($order);
+    $plan  = commerce_braintree_planid_get($order);
+    if ($plan) {
+      commerce_order_status_update($order,"completed");
+      break;
+    }
+  }
+//  $sub = commerce_braintree_subscription_get_by_id($sid);
+//  $cus = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
+//  $uid = $cus->_ids[0];
+//  db_insert('users_roles')
+//    ->fields(array('uid' => $uid, 'rid' => 3))
+//    ->execute();
 }
 
 function commerce_braintree_example_cb_subscription_charged_successfully($kind, $sid) {

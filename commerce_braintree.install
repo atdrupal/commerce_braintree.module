@@ -18,7 +18,7 @@ function commerce_braintree_requirements($phase) {
   else {
     $requirements['braintree']['value'] = $t('Not Installed');
     $requirements['braintree']['severity'] = REQUIREMENT_ERROR;
-    $requirements['braintree']['description'] = $t('Please install the example library %url.', array('%url' => 'http://example.com'));
+    $requirements['braintree']['description'] = $t('Please install the example library %url.', array('%url' => 'https://github.com/braintree/braintree_php'));
   }
 
   return $requirements;
@@ -42,7 +42,10 @@ function commerce_braintree_add_field($entity_type, $bundle, $label) {
   if (empty($field)) {
     $field = array(
       'field_name' => 'field_braintree_planid', 
-      'type' => 'text_textfield', 
+      'type' => 'text', 
+      'settings' => array(
+        'max_length' => 255, // default
+      ),
       'entity_types' => array($entity_type),
     );
     $field = field_create_field($field);
@@ -53,16 +56,17 @@ function commerce_braintree_add_field($entity_type, $bundle, $label) {
       'entity_type' => $entity_type, 
       'bundle' => $bundle, 
       'label' => $label, 
-      'widget' => array('type' => 'text_textfield'), 
+      'widget' => array(
+        'type' => 'text_textfield',
+        'settings' => array(
+          'size' => 60, // default
+        ),
+      ), 
       'display' => array(
         'default' => array(
           'label' => 'hidden', 
           'type' => 'text_default',
         ), 
-        'teaser' => array(
-          'label' => 'hidden', 
-          'type' => 'text_default',
-        ),
       ),
     );
     $instance = field_create_instance($instance);
