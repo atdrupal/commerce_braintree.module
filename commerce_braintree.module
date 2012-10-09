@@ -550,6 +550,7 @@ function commerce_braintree_creditcard_get_by_token($token) {
  */
 function commerce_braintree_planid_get($order) {
   $op = commerce_braintree_product_get_by_order($order);
+  dsm($op);
   $plan_id = $op->field_braintree_planid['und']['0']['value'];
   return $plan_id;
 }
