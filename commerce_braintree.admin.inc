@@ -60,6 +60,19 @@ function commerce_braintree_hooks() {
 function commerce_braintree_page_cancel($sub) {
   $uid  = $sub['uid'];
   $plan = $sub['planid'];
+  $user = user_load($uid);
+  $er   = FALSE;
+  if (!$user) {
+    drupal_set_message('User {$uid} doesnt exist','error'); 
+    $er = TRUE;
+  }
+  if (!commerce_braintree_plan_check($plan)) {
+    drupal_set_message('Plan {$plan} doesnt exist','error'); 
+    $er = TRUE;
+  }
+  if ($er) {
+    return '<div></div>';
+  }
   $sub  = commerce_braintree_subscription_get_by_cid_planid($uid, $plan);
   if (!$sub) {
     $message = "Not found subscription with plan id is {$plan} and user id is {$uid}";
@@ -80,7 +93,6 @@ function commerce_braintree_page_cancel($sub) {
 function commerce_braintree_subscription_view($order) {
   $plan_id  = commerce_braintree_planid_get($order);
   $sub      = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
-  dsm($sub);
   $op       = commerce_braintree_product_get_by_order($order);
   $header   = array('Title', 'Price', 'Status', 'Operation');
   $price    = commerce_currency_format($op->commerce_price['und']['0']['amount'],$op->commerce_price['und']['0']['currency_code']);
