@@ -248,18 +248,32 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   }
   
   $sub = commerce_braintree_subscription_get_by_cid($order->uid);
-  if (!$sub || $plan_id != $sub->planId) {
+  
+  if (!$sub) {
     $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
     if ($sub) {
       $status = commerce_braintree_transaction_status($sub->status);
     }
     else {
+      drupal_set_message($message, 'error');
       $status = COMMERCE_PAYMENT_STATUS_FAILURE;
     }
-    drupal_set_message($message, 'error');
     commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
-    return FALSE;
-  } 
+    return;
+  }
+  
+  if ($plan_id != $sub->planId) {
+    $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
+    if ($sub) {
+      $status = commerce_braintree_transaction_status($sub->status);
+    }
+    else {
+      drupal_set_message($message, 'error');
+      $status = COMMERCE_PAYMENT_STATUS_FAILURE;
+    }
+    commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
+    return;
+  }
   
   $status   = COMMERCE_PAYMENT_STATUS_FAILURE;
   $message  = "User {$order->uid} is subscripting to {$plan_id}";
