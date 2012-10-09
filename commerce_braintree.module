@@ -61,6 +61,13 @@ function commerce_braintree_permission() {
     ),
   );
 }
+
+/**
+ * Check grant to access cancel recurring billing page
+ * @global type $user
+ * @param type $sub
+ * @return boolean
+ */
 function commerce_braintree_page_cancel_access($sub){
   $uid = $sub['uid'];
   global $user;
@@ -246,7 +253,6 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
 }
 
-
 /**
  * 
  * @param type $order
@@ -293,6 +299,14 @@ function commerce_braintree_customer_info($pane_values, $order) {
   return $customer_new;
 }
 
+/**
+ * Create new transaction for order progress
+ * @param type $payment_method
+ * @param type $order
+ * @param type $charge
+ * @param type $status
+ * @param type $message
+ */
 function commerce_braintree_transaction($payment_method, $order, $charge, $status, $message) {
   $transaction = commerce_payment_transaction_new('braintree', $order->order_id);
   $transaction->instance_id = $payment_method['instance_id'];
@@ -488,6 +502,13 @@ function commerce_braintree_subscription_get_by_cid($cid) {
   }
   return FALSE;
 }
+
+/**
+ * Get subscription by plan id and customer id
+ * @param type $cid
+ * @param type $planid
+ * @return boolean
+ */
 function commerce_braintree_subscription_get_by_cid_planid($cid, $planid) {
   //Initializes the Braintree Library
   commerce_braintree_initialize_library();
@@ -501,7 +522,6 @@ function commerce_braintree_subscription_get_by_cid_planid($cid, $planid) {
   }
   return FALSE;
 }
-
 
 /**
  * 
@@ -541,7 +561,6 @@ function commerce_braintree_creditcard_get_by_token($token) {
   }
   return $creditCard;
 }
-
 
 /**
  * Get plan id by order
@@ -586,7 +605,11 @@ function commerce_braintree_field_attach_validate($entity_type, $entity, &$error
   }
 }
 
-
+/**
+ * Get transaction status base subscription status
+ * @param type $sub_status
+ * @return string
+ */
 function commerce_braintree_transaction_status($sub_status) {
   switch ($sub_status) {
     case 'Active':
@@ -619,19 +642,19 @@ function commerce_braintree_plan_load($plan_id, $uid) {
 /**
  * Implementation of hook_cb_subscription_went_active()
  */
-function commerce_braintree_cb_subscription_went_active($kind, $sid) {
-  $sub    = commerce_braintree_subscription_get_by_id($sid);
-  $cus    = commerce_braintree_customer_get_by_token($sub->token);
-  $orders = commerce_braintree_get_orders_by_uid($cus);
-  foreach ($orders as $id) {
-    $order = commerce_order_load($order);
-    $plan  = commerce_braintree_planid_get($order);
-    if ($plan) {
-      commerce_order_status_update($order,"completed");
-      break;
-    }
-  }
-}
+//function commerce_braintree_cb_subscription_went_active($kind, $sid) {
+//  $sub    = commerce_braintree_subscription_get_by_id($sid);
+//  $cus    = commerce_braintree_customer_get_by_token($sub->token);
+//  $orders = commerce_braintree_get_orders_by_uid($cus);
+//  foreach ($orders as $id) {
+//    $order = commerce_order_load($order);
+//    $plan  = commerce_braintree_planid_get($order);
+//    if ($plan) {
+//      commerce_order_status_update($order,"completed");
+//      break;
+//    }
+//  }
+//}
 
 /**
  * get orders by uid

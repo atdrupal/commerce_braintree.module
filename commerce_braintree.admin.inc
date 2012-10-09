@@ -9,16 +9,17 @@ function commerce_braintree_hooks() {
     $bt_challenge = $_GET['bt_challenge'];
   }
   if (isset($bt_challenge) && $bt_challenge != "") {
-    $verify = Braintree_WebhookNotification::verify($bt_challenge);
-    echo $verify;
-    watchdog('actions', 'Commerce braintree %action verify .', array('%action' => $verify));
+    echo Braintree_WebhookNotification::verify($bt_challenge);
     exit();
   }
   
   $bt_payload_param   = $_POST["bt_payload"];
   $bt_signature_param = $_POST["bt_signature"];
   
-  if (!isset($bt_signature_param) || !isset($bt_signature_param))    return FALSE;
+  if (!isset($bt_signature_param) || !isset($bt_signature_param)){
+    watchdog('braintree', 'Commerce braintree no recive webhook data.', array('%action' => $verify));
+    return FALSE;
+  }
   
   $webhookNotification = Braintree_WebhookNotification::parse($bt_signature_param, $bt_payload_param);
   
@@ -47,7 +48,7 @@ function commerce_braintree_hooks() {
       module_invoke_all('cb_subscription_went_past_due', $kind, $sid);
       break;
   }
-  watchdog('actions', 'Commerce braintree occur %action .', array('%action' => $webhookNotification->kind));
+  watchdog('braintree', 'Commerce braintree occur %action .', array('%action' => $webhookNotification->kind));
 }
 
 
