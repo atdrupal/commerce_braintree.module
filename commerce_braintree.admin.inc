@@ -72,7 +72,12 @@ function commerce_braintree_subscription_view($order) {
   $sub          = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
   $header = array('Title', 'Price', 'Status', 'Operation');
   $price  = commerce_currency_format($op->commerce_price['und']['0']['amount'],$op->commerce_price['und']['0']['currency_code']);
-  $rows[] = array($op->title, $price, $sub->status, l("cancel", "braintree/cancel/{$plan_id}/{$order->uid}"));
+  $status = "Faile";
+  if($sub) {
+    $status = $sub->status;
+  }
+  
+  $rows[] = array($op->title, $price, $status, l("cancel", "braintree/cancel/{$plan_id}/{$order->uid}"));
   $output = theme('table', array('header' => $header,
                                  'rows'   => $rows ));
   return $output;
