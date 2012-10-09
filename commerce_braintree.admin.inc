@@ -80,10 +80,11 @@ function commerce_braintree_page_cancel($sub) {
 function commerce_braintree_subscription_view($order) {
   $plan_id  = commerce_braintree_planid_get($order);
   $sub      = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
+  dsm($sub);
   $op       = commerce_braintree_product_get_by_order($order);
   $header   = array('Title', 'Price', 'Status', 'Operation');
   $price    = commerce_currency_format($op->commerce_price['und']['0']['amount'],$op->commerce_price['und']['0']['currency_code']);
-  $status   = "Faile";
+  $status   = "Not found";
   if($sub) {
     $status = $sub->status;
   }
