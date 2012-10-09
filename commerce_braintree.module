@@ -196,7 +196,6 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  dsm($order);return FALSE;
   $message = "";
   $plan_id = commerce_braintree_planid_get($order);
   if (!empty($pane_values['credit_card']['number'])) {
@@ -593,6 +592,12 @@ function commerce_braintree_transaction_status($sub_status) {
   }
 }
 
+/**
+ * Load arguments menu willcard %commerce_braintree_plan
+ * @param type $plan_id
+ * @param type $uid
+ * @return boolean
+ */
 function commerce_braintree_plan_load($plan_id, $uid) {
   if (!$plan_id || !$uid) {
     return FALSE;
@@ -601,3 +606,22 @@ function commerce_braintree_plan_load($plan_id, $uid) {
   return $sub;
 }
   
+function commerce_braintree_cb_subscription_went_active($kind, $sid) {
+//  $sub    = commerce_braintree_subscription_get_by_id($sid);
+//  $orders = commerce_braintree_get_orders_by_uid();
+}
+
+
+function commerce_braintree_get_orders_by_uid($uid) {
+  $select = db_select('commerce_order', 'c')
+            ->fields('c', array('order_id', 'uid'))
+            ->condition('uid', $uid)
+            ->execute();
+  if(!$select ) {
+    return FALSE;
+  }
+  $orders = array();
+  foreach( $select as $row ) {
+    $orders[] = $row->order_id;
+  }
+}
