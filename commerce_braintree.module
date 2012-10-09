@@ -12,6 +12,19 @@ function commerce_braintree_menu() {
   $items = array();
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
   //%planid/user/%uid
+  
+  $items['admin/commerce/orders/%commerce_order/subscription'] = array(
+    'title' => 'Subscription',
+    'page callback' => 'commerce_braintree_subscription_view',
+    'page arguments' => array(3),
+    'access callback' => 'commerce_order_access',
+    'access arguments' => array('update', 3),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 5,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'commerce_braintree.admin.inc',
+  );
+  
   $items['braintree/cancel'] = array(
     'title' => 'Cancel braintree recurring billing',
     //'load arguments' => array(2,3),
@@ -183,7 +196,7 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  //dsm($payment_method);return FALSE;
+  dsm($order);return FALSE;
   $message = "";
   $plan_id = commerce_braintree_planid_get($order);
   if (!empty($pane_values['credit_card']['number'])) {
@@ -470,6 +483,20 @@ function commerce_braintree_subscription_get_by_cid($cid) {
   }
   return FALSE;
 }
+function commerce_braintree_subscription_get_by_cid_planid($cid, $planid) {
+  //Initializes the Braintree Library
+  commerce_braintree_initialize_library();
+  $customer = commerce_braintree_customer_get($cid);
+  if (!isset($customer->creditCards[0]->subscriptions)) return FALSE;
+  $subscriptions = $customer->creditCards[0]->subscriptions;
+  foreach ($subscriptions as $subscription) {
+    if ($subscription->planId == $planid) {
+      return $subscription;
+    }
+  }
+  return FALSE;
+}
+
 
 /**
  * 

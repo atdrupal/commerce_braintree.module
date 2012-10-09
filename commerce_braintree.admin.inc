@@ -52,12 +52,28 @@ function commerce_braintree_hooks() {
 
 //function commerce_braintree_page_cancel($plan_id , $uid) {
 function commerce_braintree_page_cancel() {
-  $plan = arg(2);
-  $uid = arg(3);
+  $plan     = arg(2);
+  $uid      = arg(3);
   $customer = commerce_braintree_customer_get($uid);
   dsm($customer->creditCards[0]);
   return "<h6>hello cancel<h6>";
   $sub = commerce_braintree_subscription_get_by_cid($uid);
   commerce_braintree_subscription_cancel($sub->id);
   //commerce_braintree_subscription_cancel($subscription_id);
+}
+
+
+function commerce_braintree_subscription_view($order) {
+  $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
+  $line_item    = commerce_line_item_load($line_item_id);
+  $pid          = $line_item->commerce_product['und']['0']['product_id'];
+  $op           = commerce_product_load($pid);
+  $plan_id      = $op->field_braintree_planid['und']['0']['value'];
+  $sub          = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
+  $header = array('Title', 'Price', 'Status', 'Operation');
+  $price  = commerce_currency_format($op->commerce_price['und']['0']['amount'],$op->commerce_price['und']['0']['currency_code']);
+  $rows[] = array($op->title, $price, $sub->status, l("cancel", "braintree/cancel/{$plan_id}/{$order->uid}"));
+  $output = theme('table', array('header' => $header,
+                                 'rows'   => $rows ));
+  return $output;
 }
