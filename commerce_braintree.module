@@ -216,6 +216,10 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   }
   $message = "";
   $plan_id = commerce_braintree_planid_get($order);
+  if ($plan_id == FALSE) {
+    drupal_set_message('This product type unsupport braintree payment','error');
+    return FALSE;
+  }
   
   // If the charge amount is 0...
   if ($charge['amount'] == 0) {
@@ -635,6 +639,9 @@ function commerce_braintree_creditcard_get_by_token($token) {
  */
 function commerce_braintree_planid_get($order) {
   $op = commerce_braintree_product_get_by_order($order);
+  if (!isset($op->field_braintree_planid['und']['0']['value'])) {
+    return FALSE;
+  }
   $plan_id = $op->field_braintree_planid['und']['0']['value'];
   return $plan_id;
 }
