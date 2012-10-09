@@ -23,7 +23,7 @@ function commerce_braintree_hooks() {
   $webhookNotification = Braintree_WebhookNotification::parse($bt_signature_param, $bt_payload_param);
   
   $kind = $webhookNotification->kind;
-  $sid = $webhookNotification->subscription->id;
+  $sid  = $webhookNotification->subscription->id;
   switch ($kind) {
     case Braintree_WebhookNotification::SUBSCRIPTION_CANCELED:
       module_invoke_all('cb_subscription_canceled', $kind, $sid);
@@ -57,9 +57,9 @@ function commerce_braintree_hooks() {
  * @return type
  */
 function commerce_braintree_page_cancel($sub) {
-  $uid   = $sub['uid'];
-  $plan    = $sub['planid'];
-  $sub    = commerce_braintree_subscription_get_by_cid_planid($uid, $plan);
+  $uid  = $sub['uid'];
+  $plan = $sub['planid'];
+  $sub  = commerce_braintree_subscription_get_by_cid_planid($uid, $plan);
   if (!$sub) {
     $message = "Not found subscription with plan id is {$plan} and user id is {$uid}";
     drupal_set_message("Not found subscription with plan id <strong>{$plan}</strong> and user id <strong>{$uid}</strong>", "error");
@@ -77,15 +77,12 @@ function commerce_braintree_page_cancel($sub) {
  * @return type
  */
 function commerce_braintree_subscription_view($order) {
-  $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
-  $line_item    = commerce_line_item_load($line_item_id);
-  $pid          = $line_item->commerce_product['und']['0']['product_id'];
-  $op           = commerce_product_load($pid);
-  $plan_id      = $op->field_braintree_planid['und']['0']['value'];
-  $sub          = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
-  $header = array('Title', 'Price', 'Status', 'Operation');
-  $price  = commerce_currency_format($op->commerce_price['und']['0']['amount'],$op->commerce_price['und']['0']['currency_code']);
-  $status = "Faile";
+  $plan_id  = commerce_braintree_planid_get($order);
+  $sub      = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
+  $op       = commerce_braintree_product_get_by_order($order);
+  $header   = array('Title', 'Price', 'Status', 'Operation');
+  $price    = commerce_currency_format($op->commerce_price['und']['0']['amount'],$op->commerce_price['und']['0']['currency_code']);
+  $status   = "Faile";
   if($sub) {
     $status = $sub->status;
   }

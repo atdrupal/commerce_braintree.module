@@ -544,23 +544,32 @@ function commerce_braintree_creditcard_get_by_token($token) {
 
 
 /**
- * 
+ * Get plan id by order
  * @param type $order
  * @return type
  */
 function commerce_braintree_planid_get($order) {
-  $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
-  $line_item = commerce_line_item_load($line_item_id);
-  $pid = $line_item->commerce_product['und']['0']['product_id'];
-  $op = commerce_product_load($pid);
+  $op = commerce_braintree_product_get_by_order($order);
   $plan_id = $op->field_braintree_planid['und']['0']['value'];
   return $plan_id;
 }
 
+/**
+ * Get product by order
+ * @param type $order
+ * @return type
+ */
+function commerce_braintree_product_get_by_order($order) {
+  $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
+  $line_item = commerce_line_item_load($line_item_id);
+  $pid = $line_item->commerce_product['und']['0']['product_id'];
+  $op = commerce_product_load($pid);
+  return $op;
+}
 
 /**
  * Implements hook_field_attach_validate()
- * validate field plan id
+ * Validate field plan id
  */
 function commerce_braintree_field_attach_validate($entity_type, $entity, &$errors) {
   if ($entity_type != "commerce_product"){
@@ -605,13 +614,29 @@ function commerce_braintree_plan_load($plan_id, $uid) {
   $sub = array("planid" => $plan_id, "uid" => $uid);
   return $sub;
 }
-  
+
+/**
+ * Implementation of hook_cb_subscription_went_active()
+ */
 function commerce_braintree_cb_subscription_went_active($kind, $sid) {
-//  $sub    = commerce_braintree_subscription_get_by_id($sid);
-//  $orders = commerce_braintree_get_orders_by_uid();
+  $sub    = commerce_braintree_subscription_get_by_id($sid);
+  $cus    = commerce_braintree_customer_get_by_token($sub->token);
+  $orders = commerce_braintree_get_orders_by_uid($cus);
+  foreach ($orders as $id) {
+    $order = commerce_order_load($order);
+    $plan  = commerce_braintree_planid_get($order);
+    if ($plan) {
+      commerce_order_status_update($order,"completed");
+      break;
+    }
+  }
 }
 
-
+/**
+ * get orders by uid
+ * @param type $uid
+ * @return boolean
+ */
 function commerce_braintree_get_orders_by_uid($uid) {
   $select = db_select('commerce_order', 'c')
             ->fields('c', array('order_id', 'uid'))
