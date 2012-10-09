@@ -50,19 +50,31 @@ function commerce_braintree_hooks() {
 }
 
 
-//function commerce_braintree_page_cancel($plan_id , $uid) {
-function commerce_braintree_page_cancel() {
-  $plan     = arg(2);
-  $uid      = arg(3);
-  $customer = commerce_braintree_customer_get($uid);
-  dsm($customer->creditCards[0]);
-  return "<h6>hello cancel<h6>";
-  $sub = commerce_braintree_subscription_get_by_cid($uid);
-  commerce_braintree_subscription_cancel($sub->id);
-  //commerce_braintree_subscription_cancel($subscription_id);
+/**
+ * Cancel braintree recurring billing by uid and plan id
+ * @param type $sub
+ * @return type
+ */
+function commerce_braintree_page_cancel($sub) {
+  $uid   = $sub['uid'];
+  $plan    = $sub['planid'];
+  $sub    = commerce_braintree_subscription_get_by_cid_planid($uid, $plan);
+  if (!$sub) {
+    $message = "Not found subscription with plan id is {$plan} and user id is {$uid}";
+    drupal_set_message("Not found subscription with plan id <strong>{$plan}</strong> and user id <strong>{$uid}</strong>", "error");
+    return '<div>Faile</div>';
+  }
+  $result = commerce_braintree_subscription_cancel($sub->id, $message);
+  drupal_set_message($message, $result ? "status" : "error");
+  return '<div>' . $message . '</div>';
 }
 
 
+/**
+ * View status subscription on order
+ * @param type $order
+ * @return type
+ */
 function commerce_braintree_subscription_view($order) {
   $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
   $line_item    = commerce_line_item_load($line_item_id);
@@ -76,9 +88,10 @@ function commerce_braintree_subscription_view($order) {
   if($sub) {
     $status = $sub->status;
   }
-  
-  $rows[] = array($op->title, $price, $status, l("cancel", "braintree/cancel/{$plan_id}/{$order->uid}"));
+  $rows[] = array($op->title, $price, $status, l("cancel", "braintree/{$plan_id}/uid/{$order->uid}/cancel"));
   $output = theme('table', array('header' => $header,
                                  'rows'   => $rows ));
   return $output;
 }
+
+

@@ -11,7 +11,6 @@ function commerce_braintree_menu() {
   
   $items = array();
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
-  //%planid/user/%uid
   
   $items['admin/commerce/orders/%commerce_order/subscription'] = array(
     'title' => 'Subscription',
@@ -25,13 +24,13 @@ function commerce_braintree_menu() {
     'file' => 'commerce_braintree.admin.inc',
   );
   
-  $items['braintree/cancel'] = array(
+  $items['braintree/%commerce_braintree_plan/uid/%/cancel'] = array(
     'title' => 'Cancel braintree recurring billing',
-    //'load arguments' => array(2,3),
+    'load arguments' => array(3),
     'page callback' => 'commerce_braintree_page_cancel',
-    //'page arguments' => array(2,3),
-//    'access callback' => 'commerce_braintree_page_cancel_access',
-    'access arguments' => array('access content'), 
+    'page arguments' => array(1),
+    'access callback' => 'commerce_braintree_page_cancel_access',
+    'access arguments' => array(1), 
     'type' => MENU_CALLBACK,
     'file' => 'commerce_braintree.admin.inc',
   );
@@ -62,7 +61,8 @@ function commerce_braintree_permission() {
     ),
   );
 }
-function commerce_braintree_page_cancel_access($uid){
+function commerce_braintree_page_cancel_access($sub){
+  $uid = $sub['uid'];
   global $user;
   if (user_access('cancel any user')) {
     return TRUE;
@@ -452,16 +452,22 @@ function commerce_braintree_subscription_create($token, $plan_id, &$message = ""
  * @param type $subscription_id
  * @return type 
  */
-function commerce_braintree_subscription_cancel($subscription_id, $message = "") {
+function commerce_braintree_subscription_cancel($subscription_id, &$message = "") {
   //Initializes the Braintree Library
   commerce_braintree_initialize_library();
-  $result = Braintree_Subscription::cancel($subscription_id);
-  if ($result->success) {
-    $message = $result->message;
-    return TRUE;
-  }
-  foreach($result->errors->deepAll() AS $error) {
-      $message .= $error->code . ": " . $error->message . "\n";
+  try {
+    $result = Braintree_Subscription::cancel($subscription_id);
+    if ($result->success) {
+      $message = "Subscription {$subscription_id} was canceled!";
+      return TRUE;
+    }
+    foreach($result->errors->deepAll() AS $error) {
+        $message .= $error->code . ": " . $error->message . "\n";
+    }
+    return FALSE;
+  } catch (Exception $e) {
+    //we have a not found exception!
+    $message = "Not found subscription id: {$subscription_id}";
   }
   return FALSE;
 }
@@ -587,9 +593,11 @@ function commerce_braintree_transaction_status($sub_status) {
   }
 }
 
-//function commerce_braintree_plan_load($plan_id, $uid) {
-//  dsm($plan_id);
-//  dsm($uid);
-//  return $uid;
-//load arguments}
+function commerce_braintree_plan_load($plan_id, $uid) {
+  if (!$plan_id || !$uid) {
+    return FALSE;
+  }
+  $sub = array("planid" => $plan_id, "uid" => $uid);
+  return $sub;
+}
   
