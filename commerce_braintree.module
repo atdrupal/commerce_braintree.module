@@ -342,6 +342,7 @@ function commerce_braintree_initialize_library() {
   Braintree_Configuration::merchantId($payment['settings']['merchant_id']);
   Braintree_Configuration::publicKey($payment['settings']['public_key']);
   Braintree_Configuration::privateKey($payment['settings']['private_key']);
+  return TRUE;
 }
 
 /**
