@@ -589,15 +589,15 @@ function commerce_braintree_field_attach_validate($entity_type, $entity, &$error
 
 function commerce_braintree_transaction_status($sub_status) {
   switch ($sub_status) {
-    case ACTIVE:
+    case 'Active':
       return COMMERCE_PAYMENT_STATUS_SUCCESS;
-    case CANCELED:
+    case 'Canceled':
       break;
-    case EXPIRED:
+    case 'Expired':
       break;
-    case PAST_DUE:
+    case 'Past Due':
       break;
-    case PENDING:
+    case 'Pending':
       return COMMERCE_PAYMENT_STATUS_PENDING;
   }
 }
