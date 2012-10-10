@@ -40,17 +40,17 @@ function commerce_braintree_example_menu() {
     'title' => 'Customer Braintree',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('commerce_braintree_example_form_customer'),
-    'access arguments' =>  array('access content'), 
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'commerce_braintree_example.inc',
-  );
-  $items['user/%user/braintre-cancel'] = array(
-    'title' => 'Cancel Braintree',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_example_form_customer_cancel'),
-    'access arguments' =>  array('access content'), 
+    'access callback' => 'commerce_braintree_example_customer_acess',
     'type' => MENU_LOCAL_TASK,
     'file' => 'commerce_braintree_example.inc',
   );
   return $items;
+}
+
+function commerce_braintree_example_customer_acess() {
+  global $user;
+  if (!commerce_braintree_customer_get($user->uid)) {
+    return FALSE;
+  }
+  return TRUE;  
 }

@@ -8,8 +8,6 @@
 function commerce_braintree_example_form_customer() {
   
   global $user;
-  $is_new = FALSE;
-  //$customer = commerce_braintree_customer_get($user->uid);
   $customer = commerce_braintree_customer_get(5);
   if (is_object($customer)) {
     $creditcard = $customer->creditCards[0];
@@ -19,24 +17,7 @@ function commerce_braintree_example_form_customer() {
     $customer = array();
     $creditcard = array();
     $billing_address = array();
-    $is_new = TRUE;
-    variable_set('commerce_braintree_example_is_new', TRUE);
   }
-//    commerce_braintree_initialize_library();
-//    $updateResult = Braintree_CreditCard::update(
-//    $creditcard->token,
-//      array(
-//        'number' => '4005519200000004',
-//        'expirationDate' => '07/14'
-//            )
-//    );
-//    dsm($updateResult);return FALSE;
-//    $customer = commerce_braintree_creditcard_get_by_token($creditcard->token);
-//    
-//    dsm($customer);return FALSE;
-//  dsm($creditcard);
-//  dsm($billing_address);
-
   
   $form = array();
   
@@ -186,7 +167,12 @@ function commerce_braintree_example_form_customer_validate($form, &$form_state) 
 function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   global $user;
 //  dsm($form_state);
-  $is_new = variable_get('commerce_braintree_example_is_new', FALSE);
+  $token  = commerce_braintree_customer_get($cid);
+  if (!$token) {
+    return FALSE;
+  }
+  $token = $token->creditCards[0]->token;
+  
   //billing address
   $billing_address['firstName']       = $form_state['values']['ad_first_name'];
   $billing_address['lastName']        = $form_state['values']['ad_last_name'];
@@ -199,11 +185,14 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   $billing_address['countryName']     = $form_state['values']['ad_country_name'];
   
   //creditcard
-//  $creditcard['cardholderName'] = $form_state['values']['ca_cardholder_name'];
-//  $creditcard['number'] = $form_state['values']['ca_card_number'];
-//  $creditcard['expirationDate'] = $form_state['values']['ca_exp_date'];
-//  $creditcard['billingAddress'] = $billing_address;
-//  $creditcard['options']        = array('verifyCard' => TRUE, 'updateExistingToken' => $form_state['values']['ca_token']);
+  $creditcard['cardholderName'] = $form_state['values']['ca_cardholder_name'];
+  $creditcard['number']         = $form_state['values']['ca_card_number'];
+  $creditcard['expirationDate'] = $form_state['values']['ca_exp_date'];
+  $creditcard['billingAddress'] = $billing_address;
+  $creditcard['options']        = array('verifyCard' => TRUE, 'updateExistingToken' => $form_state['values']['ca_token'],
+                                        'updateExistingToken' => $token
+                                       );
+  $creditcard['billingAddress']['options'] = array('updateExisting' => true);
   
   //customer
   $customer['firstName']  = $form_state['values']['c_first_name'];
@@ -212,58 +201,13 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   $customer['email']      = $form_state['values']['c_email'];
   $customer['phone']      = $form_state['values']['c_phone'];
   $customer['fax']        = $form_state['values']['c_fax'];
-  //$customer['creditCard'] = $creditcard;
-//  dsm($customer);
-  if ($is_new) {
-    $result = commerce_braintree_customer_create($customer);
-    if ($result->success) {
-      drupal_set_message(t('Create customer successfull') , 'status');
-    } 
-    else {
-      drupal_set_message(t('Cannot create customer') , 'error');
-    }
-  }
-  else {
-    $result = commerce_braintree_customer_update($user->uid,$customer);
-    dsm($result);
-    $creditcard = $result->customer->creditCards[0];
-    //$billing_address = $result->customer->billingAddress;
-//    dsm($creditcard);
-//    dsm($billing_address);
-  }
+  $customer['creditCard'] = $creditcard;
   
-  
+  $result = commerce_braintree_customer_update($user->uid,$customer);
+  dsm($result);
+  $creditcard = $result->customer->creditCards[0];
 }
 
 
 
  
-function commerce_braintree_example_form_customer_cancel() {
-  global $user;
-  $form = array();
-  $sub = commerce_braintree_subscription_get_by_cid($user->uid);
-  if (!$sub) {
-    $title = t('You are not subsciption');
-  }
-  else {
-    $title = t('Are you sure you want to cancel');
-  }
-    
-  $form['description'] = array(
-    '#type' => 'item', 
-    '#title' =>  $title,
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Ok'),
-  );
-  return $form;
-}
-
-function commerce_braintree_example_form_customer_cancel_submit($form, &$form_state) {
-  global $user;
-  
-  $sub = commerce_braintree_subscription_get_by_cid($user->uid);
-  commerce_braintree_subscription_cancel($sub->id);
-  drupal_set_message(t("cancel success"),"status");
-}
