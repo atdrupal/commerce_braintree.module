@@ -143,7 +143,7 @@ function commerce_braintree_example_form_customer() {
   );
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => $is_new ? t('Create') : t('Save'),
+    '#value' => t('Save'),
   );
   
   return $form;
