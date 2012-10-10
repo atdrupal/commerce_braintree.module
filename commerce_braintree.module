@@ -531,6 +531,7 @@ function commerce_braintree_subscription_create($token, $plan_id, &$message = ""
     'planId' => $plan_id
   ));
   if ($sub->success) {
+    $message = "Transaction is successsfull";
     return $sub;
   }
   foreach ($sub->errors->deepAll() AS $error) {
