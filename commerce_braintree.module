@@ -402,6 +402,7 @@ function commerce_braintree_customer_update($cid, array $info, &$message) {
   //update customer
   $customer = Braintree_Customer::update($cid, $info);
   if ($customer->success) {
+    $message = 'update successfull';
     return $customer;
   } 
   
