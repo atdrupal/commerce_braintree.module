@@ -256,11 +256,13 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     $token = $customer->creditCards[0]->token;
   }
   
+  //Get all subsription user in order
   $subs = commerce_braintree_subscription_get_by_cid($order->uid);
   
+  //If not found. Create new
   if ($subs == FALSE) {
     $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
-    if ($sub) {
+    if ($sub !== FALSE) {
       $status = commerce_braintree_transaction_status($sub->status);
     }
     else {
@@ -271,6 +273,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     return;
   }
   
+  //Check duplicate
   foreach ($subs as $sub) {
     if ($plan_id == $sub->planId) {
       $status   = COMMERCE_PAYMENT_STATUS_FAILURE;
@@ -280,7 +283,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
       return FALSE;
     }
   }
-  
+  //Create new subscription if it don't duplicate
   $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
   if ($sub !== FALSE) {
     $status = commerce_braintree_transaction_status($sub->status);
