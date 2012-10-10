@@ -365,11 +365,16 @@ function commerce_braintree_initialize_library() {
   if (!$payment) {
     return FALSE;
   }
-  //Setup configuration
-  Braintree_Configuration::environment($payment['settings']['environment']);
-  Braintree_Configuration::merchantId($payment['settings']['merchant_id']);
-  Braintree_Configuration::publicKey($payment['settings']['public_key']);
-  Braintree_Configuration::privateKey($payment['settings']['private_key']);
+  try {
+    Braintree_Configuration::environment($payment['settings']['environment']);
+    Braintree_Configuration::merchantId($payment['settings']['merchant_id']);
+    Braintree_Configuration::publicKey($payment['settings']['public_key']);
+    Braintree_Configuration::privateKey($payment['settings']['private_key']);
+  } 
+  catch (Exception $e) {
+    drupal_set_message($e->getMessage(), 'error');
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -557,7 +562,7 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
     return FALSE;
   } catch (Exception $e) {
     //we have a not found exception!
-    $message = "Not found subscription id: {$subscription_id}";
+    $message = $e->getMessage();
   }
   return FALSE;
 }

@@ -51,7 +51,6 @@ function commerce_braintree_hooks() {
   watchdog('braintree', 'Commerce braintree occur %action .', array('%action' => $webhookNotification->kind));
 }
 
-
 /**
  * Cancel braintree recurring billing by uid and plan id
  * @param type $sub
@@ -84,7 +83,6 @@ function commerce_braintree_page_cancel($sub) {
   return '<div>' . $message . '</div>';
 }
 
-
 /**
  * View status subscription on order
  * @param type $order
@@ -105,10 +103,6 @@ function commerce_braintree_subscription_view($order) {
                                  'rows'   => $rows ));
   return $output;
 }
-
-
-
-
 
 /**
  * Define form edit for customer
@@ -259,7 +253,6 @@ function commerce_braintree_form_customer() {
   
   return $form;
 }
-
 
 /**
  * validate form
