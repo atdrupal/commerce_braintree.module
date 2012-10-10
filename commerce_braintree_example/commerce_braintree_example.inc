@@ -8,7 +8,7 @@
 function commerce_braintree_example_form_customer() {
   
   global $user;
-  $customer = commerce_braintree_customer_get(5);
+  $customer = commerce_braintree_customer_get($user->uid);
   if (is_object($customer)) {
     $creditcard = $customer->creditCards[0];
     $billing_address = $creditcard->billingAddress;
