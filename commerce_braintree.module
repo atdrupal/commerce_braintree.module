@@ -48,7 +48,7 @@ function commerce_braintree_menu() {
     'page arguments' => array('commerce_braintree_form_customer'),
     'access callback' => 'commerce_braintree_customer_acess',
     'type' => MENU_LOCAL_TASK,
-    'file' => 'commerce_braintree_example.inc',
+    'file' => 'commerce_braintree.inc',
   );
   if (!isset($payment['settings']['webhook_link']))  return $items;
   // Define an path that trigger from braintree Webhooks
