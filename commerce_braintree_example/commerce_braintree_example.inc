@@ -203,9 +203,12 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   $customer['fax']        = $form_state['values']['c_fax'];
   $customer['creditCard'] = $creditcard;
   
-  $result = commerce_braintree_customer_update($user->uid,$customer);
-  dsm($result);
-  $creditcard = $result->customer->creditCards[0];
+  $result = commerce_braintree_customer_update($user->uid, $customer, $message);
+  $status = 'status';
+  if (!$result) {
+    $status = 'error';
+  }
+  drupal_set_message($message, $status);
 }
 
 

@@ -393,15 +393,22 @@ function commerce_braintree_customer_create($customer, &$message = "") {
  * @param array $info
  * @return type 
  */
-function commerce_braintree_customer_update($cid, array $info) {
+function commerce_braintree_customer_update($cid, array $info, &$message) {
   //Initializes the Braintree Library
   $load = commerce_braintree_initialize_library();
   if ($load == FALSE) {    
     return FALSE;  
   }
   //update customer
-  $result = Braintree_Customer::update($cid, $info);
-  return $result;
+  $customer = Braintree_Customer::update($cid, $info);
+  if ($customer->success) {
+    return $customer;
+  } 
+  
+  foreach($customer->errors->deepAll() AS $error) {
+      $message .= $error->code . ": " . $error->message . "\n";
+  }
+  return FALSE;
 }
 
 /**
@@ -725,8 +732,6 @@ function commerce_braintree_plan_load($plan_id, $uid) {
   $sub = array("planid" => $plan_id, "uid" => $uid);
   return $sub;
 }
-
-
 
 /**
  * get orders by uid
