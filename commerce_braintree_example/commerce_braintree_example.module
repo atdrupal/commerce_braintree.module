@@ -36,14 +36,14 @@ function commerce_braintree_example_cb_subscription_charged_successfully($kind, 
 
 function commerce_braintree_example_menu() {
   $items = array();
-  $items['user/%user/customer'] = array(
-    'title' => 'Customer Braintree',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_example_form_customer'),
-    'access callback' => 'commerce_braintree_example_customer_acess',
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'commerce_braintree_example.inc',
-  );
+//  $items['user/%user/customer'] = array(
+//    'title' => 'Customer Braintree',
+//    'page callback' => 'drupal_get_form',
+//    'page arguments' => array('commerce_braintree_example_form_customer'),
+//    'access callback' => 'commerce_braintree_example_customer_acess',
+//    'type' => MENU_LOCAL_TASK,
+//    'file' => 'commerce_braintree_example.inc',
+//  );
   return $items;
 }
 
