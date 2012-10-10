@@ -167,7 +167,7 @@ function commerce_braintree_example_form_customer_validate($form, &$form_state) 
 function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   global $user;
 //  dsm($form_state);
-  $token  = commerce_braintree_customer_get($cid);
+  $token  = commerce_braintree_customer_get($user->uid);
   if (!$token) {
     return FALSE;
   }
