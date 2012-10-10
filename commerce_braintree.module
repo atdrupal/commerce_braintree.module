@@ -263,7 +263,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   if ($subs == FALSE) {
     $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
     if ($sub !== FALSE) {
-      $status = commerce_braintree_transaction_status($sub->status);
+      $status = COMMERCE_PAYMENT_STATUS_SUCCESS;
     }
     else {
       drupal_set_message($message, 'error');
@@ -286,7 +286,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   //Create new subscription if it don't duplicate
   $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
   if ($sub !== FALSE) {
-    $status = commerce_braintree_transaction_status($sub->status);
+    $status = COMMERCE_PAYMENT_STATUS_SUCCESS;
   }
   else {
     drupal_set_message($message, 'error');
@@ -740,7 +740,7 @@ function commerce_braintree_transaction_status($sub_status) {
     case 'Past Due':
       break;
     case 'Pending':
-      return COMMERCE_PAYMENT_STATUS_PENDING;
+      return COMMERCE_PAYMENT_STATUS_SUCCESS;
   }
 }
 
