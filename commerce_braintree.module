@@ -307,14 +307,14 @@ function commerce_braintree_customer_info($pane_values, $order) {
       $billing_address_get['last_name'] = implode(' ', $name_parts);
     }
     $billing_address = array(
-      'firstName' => substr($billing_address_get['first_name'], 0, 50),
-      'lastName' => substr($billing_address_get['last_name'], 0, 50),
-      'company' => substr($billing_address_get['organisation_name'], 0, 50),
-      'streetAddress' => substr($billing_address_get['thoroughfare'], 0, 60),
-      'extendedAddress' => substr($billing_address_get['premise'], 0, 60),
-      'postalCode' => substr($billing_address_get['postal_code'], 0, 20),
-      'countryCodeAlpha2' => $billing_address_get['country'],
-      'locality' => $billing_address_get['locality'],
+      'firstName' => isset($billing_address_get['first_name']) ?substr($billing_address_get['first_name'], 0, 50) : "",
+      'lastName' => isset($billing_address_get['last_name']) ?substr($billing_address_get['last_name'], 0, 50) : "",
+      'company' => isset($billing_address_get['organisation_name']) ? substr($billing_address_get['organisation_name'], 0, 50) : "",
+      'streetAddress' => isset($billing_address_get['thoroughfare']) ? substr($billing_address_get['thoroughfare'], 0, 60) : "",
+      'extendedAddress' => isset($billing_address_get['premise']) ? substr($billing_address_get['premise'], 0, 60) : "",
+      'postalCode' => isset($billing_address_get['postal_code']) ? substr($billing_address_get['postal_code'], 0, 20) : "",
+      'countryCodeAlpha2' => isset($billing_address_get['country']) ? $billing_address_get['country'] : "",
+      'locality' => isset($billing_address_get['locality']) ? $billing_address_get['locality'] : "",
     );
   }
   
@@ -328,9 +328,9 @@ function commerce_braintree_customer_info($pane_values, $order) {
   );
   
   $customer_new = array(
-    'firstName' => $billing_address['firstName'],
-    'lastName' => $billing_address['lastName'],
-    'email' => substr($order->mail, 0, 255),
+    'firstName' => isset($billing_address['firstName']) ? $billing_address['firstName'] : "",
+    'lastName' => isset($billing_address['firstName']) ? $billing_address['lastName'] : "",
+    'email' => isset($billing_address['firstName']) ? substr($order->mail, 0, 255) : "",
     'id' => $order->uid,
     'creditCard' => $credit_card,
   );
