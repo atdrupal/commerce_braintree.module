@@ -45,8 +45,8 @@ function commerce_braintree_menu() {
   $items['user/%user/customer'] = array(
     'title' => 'Customer recurring billing',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_example_form_customer'),
-    'access callback' => 'commerce_braintree_example_customer_acess',
+    'page arguments' => array('commerce_braintree_form_customer'),
+    'access callback' => 'commerce_braintree_customer_acess',
     'type' => MENU_LOCAL_TASK,
     'file' => 'commerce_braintree_example.inc',
   );
@@ -760,4 +760,17 @@ function commerce_braintree_get_orders_by_uid($uid) {
   foreach( $select as $row ) {
     $orders[] = $row->order_id;
   }
+}
+
+/**
+ * Callback access edit customer form
+ * @global type $user
+ * @return boolean
+ */
+function commerce_braintree_customer_acess() {
+  global $user;
+  if (!commerce_braintree_customer_get($user->uid)) {
+    return FALSE;
+  }
+  return TRUE;  
 }
