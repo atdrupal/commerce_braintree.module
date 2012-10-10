@@ -1,7 +1,19 @@
 <?php 
+/**
+ * @file
+ * The form to update customer 
+ *
+ * Hook callback base braintree webhook
+ * 
+ * Status page and cancel link to orders views
+ */
 
 include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
 
+/**
+ * Build hook base braintree server webhook
+ * @return boolean
+ */
 function commerce_braintree_hooks() {
   commerce_braintree_initialize_library();
   $bt_challenge = "";
@@ -16,7 +28,7 @@ function commerce_braintree_hooks() {
   $bt_payload_param   = $_POST["bt_payload"];
   $bt_signature_param = $_POST["bt_signature"];
   
-  if (!isset($bt_signature_param) || !isset($bt_signature_param)){
+  if (!isset($bt_signature_param) || !isset($bt_signature_param)) {
     watchdog('braintree', 'Commerce braintree no recive webhook data.', array('%action' => $verify));
     return FALSE;
   }
@@ -62,11 +74,11 @@ function commerce_braintree_page_cancel($sub) {
   $user = user_load($uid);
   $er   = FALSE;
   if (!$user) {
-    drupal_set_message('User {$uid} doesnt exist','error'); 
+    drupal_set_message(check_plain("User {$uid} doesnt exist"), 'error'); 
     $er = TRUE;
   }
   if (!commerce_braintree_plan_check($plan)) {
-    drupal_set_message('Plan {$plan} doesnt exist','error'); 
+    drupal_set_message(check_plain("Plan {$plan} doesnt exist"), 'error'); 
     $er = TRUE;
   }
   if ($er) {
@@ -74,8 +86,8 @@ function commerce_braintree_page_cancel($sub) {
   }
   $sub  = commerce_braintree_subscription_get_by_cid_planid($uid, $plan);
   if (!$sub) {
-    $message = "Not found subscription with plan id is {$plan} and user id is {$uid}";
-    drupal_set_message("Not found subscription with plan id <strong>{$plan}</strong> and user id <strong>{$uid}</strong>", "error");
+    $message = check_plain("Not found subscription with plan id is {$plan} and user id is {$uid}");
+    drupal_set_message($message, "error");
     return '<div>Faile</div>';
   }
   $result = commerce_braintree_subscription_cancel($sub->id, $message);
@@ -93,12 +105,12 @@ function commerce_braintree_subscription_view($order) {
   $sub      = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
   $op       = commerce_braintree_product_get_by_order($order);
   $header   = array('Title', 'Price', 'Status', 'Operation');
-  $price    = commerce_currency_format($op->commerce_price['und']['0']['amount'],$op->commerce_price['und']['0']['currency_code']);
+  $price    = commerce_currency_format($op->commerce_price['und']['0']['amount'], $op->commerce_price['und']['0']['currency_code']);
   $status   = "Not found";
-  if($sub) {
+  if ($sub) {
     $status = $sub->status;
   }
-  $rows[] = array($op->title, $price, $status, l("cancel", "braintree/{$plan_id}/uid/{$order->uid}/cancel"));
+  $rows[] = array($op->title, $price, $status, l(t("cancel"), "braintree/{$plan_id}/uid/{$order->uid}/cancel"));
   $output = theme('table', array('header' => $header,
                                  'rows'   => $rows ));
   return $output;
@@ -183,7 +195,7 @@ function commerce_braintree_form_customer() {
   );
   $form['payment_method']['ca_exp_date'] = array(
     '#type' => 'textfield',
-    '#title' => t('Expiration Date '),
+    '#title' => t('Expiration Date'),
     '#description' => t('Expiration Date (MM/YYYY)'),
     '#default_value' => isset($creditcard->expirationDate) ? $creditcard->expirationDate : '',
     '#required' => TRUE,
@@ -296,7 +308,7 @@ function commerce_braintree_form_customer_submit($form, &$form_state) {
   $creditcard['options']        = array('verifyCard' => TRUE, 'updateExistingToken' => $form_state['values']['ca_token'],
                                         'updateExistingToken' => $token
                                        );
-  $creditcard['billingAddress']['options'] = array('updateExisting' => true);
+  $creditcard['billingAddress']['options'] = array('updateExisting' => TRUE);
   
   //customer
   $customer['firstName']  = $form_state['values']['c_first_name'];
@@ -313,6 +325,6 @@ function commerce_braintree_form_customer_submit($form, &$form_state) {
   if (!$result) {
     $status = 'error';
   }
-  drupal_set_message($message, $status);
+  drupal_set_message(check_plain($message), $status);
 }
 

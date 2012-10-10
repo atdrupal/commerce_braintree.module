@@ -84,7 +84,7 @@ function commerce_braintree_permission() {
  * @param type $sub
  * @return boolean
  */
-function commerce_braintree_page_cancel_access($sub){
+function commerce_braintree_page_cancel_access($sub) {
   $uid = $sub['uid'];
   global $user;
   if (user_access('cancel any user')) {
@@ -226,7 +226,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   $message = "";
   $plan_id = commerce_braintree_planid_get($order);
   if ($plan_id == FALSE) {
-    drupal_set_message('This product type unsupport braintree payment','error');
+    drupal_set_message(t('This product type unsupport braintree payment'), 'error');
     return FALSE;
   }
   
@@ -395,7 +395,7 @@ function commerce_braintree_customer_create($customer, &$message = "") {
     return $customer;
   } 
   
-  foreach($customer->errors->deepAll() AS $error) {
+  foreach ($customer->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
   return FALSE;
@@ -420,7 +420,7 @@ function commerce_braintree_customer_update($cid, array $info, &$message) {
     return $customer;
   } 
   
-  foreach($customer->errors->deepAll() AS $error) {
+  foreach ($customer->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
   return FALSE;
@@ -533,7 +533,7 @@ function commerce_braintree_subscription_create($token, $plan_id, &$message = ""
   if ($sub->success) {
     return $sub;
   }
-  foreach($sub->errors->deepAll() AS $error) {
+  foreach ($sub->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
   return FALSE;
@@ -556,7 +556,7 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
       $message = "Subscription {$subscription_id} was canceled!";
       return TRUE;
     }
-    foreach($result->errors->deepAll() AS $error) {
+    foreach ($result->errors->deepAll() AS $error) {
         $message .= $error->code . ": " . $error->message . "\n";
     }
     return FALSE;
@@ -701,7 +701,7 @@ function commerce_braintree_product_get_by_order($order) {
  * Validate field plan id
  */
 function commerce_braintree_field_attach_validate($entity_type, $entity, &$errors) {
-  if ($entity_type != "commerce_product"){
+  if ($entity_type != "commerce_product") {
     return;
   }
   $plan_id = $entity->field_braintree_planid['und']['0']['value'];
@@ -758,11 +758,11 @@ function commerce_braintree_get_orders_by_uid($uid) {
             ->fields('c', array('order_id', 'uid'))
             ->condition('uid', $uid)
             ->execute();
-  if(!$select ) {
+  if (!$select ) {
     return FALSE;
   }
   $orders = array();
-  foreach( $select as $row ) {
+  foreach ( $select as $row ) {
     $orders[] = $row->order_id;
   }
 }

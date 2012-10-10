@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * @file
+ * Requirements libraries
+ * 
+ * Create field_braintree_planid and add to commerce_sp_subscription bundle
+ */
 
 function commerce_braintree_requirements($phase) {
   $requirements = array();
