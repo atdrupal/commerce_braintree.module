@@ -328,3 +328,61 @@ function commerce_braintree_form_customer_submit($form, &$form_state) {
   drupal_set_message(check_plain($message), $status);
 }
 
+/**
+ * Define form to upgrade
+ * @return type
+ */
+function commerce_braintree_form_upgrade() {
+  $form = array();
+  $form['profile'] = array(
+    '#type' => 'select',
+    '#title' => t('Choose a profile'),
+    '#options' => commerce_braintree_product_list(),
+  );  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Upgrade'),
+  );
+  return $form;
+}
+
+/**
+ * Upgrade form submit
+ * @global type $user
+ * @param type $form
+ * @param array $form_state
+ */
+function commerce_braintree_form_upgrade_submit($form, &$form_state) {
+  global $user;
+  $pid = $form_state['values']['profile'];
+  $order = commerce_cart_order_load($user->uid);
+  
+  if (!empty($order->commerce_line_items)) {
+    $line_items = array_shift($order->commerce_line_items);
+    foreach ($line_items as $item) {
+      commerce_cart_order_product_line_item_delete($order, $item['line_item_id']);
+    }
+  }
+  $order = commerce_cart_product_add_by_id($pid);
+  $form_state['redirect'] = "checkout/{$order->order_id}";
+}
+
+/**
+ * Get all product 
+ * @param type $type
+ * @return boolean
+ */
+function commerce_braintree_product_list($type = 'bags_cases') {
+  $select = db_select('commerce_product', 'c')
+            ->fields('c')
+            ->condition('type', $type)
+            ->execute();
+  if (!$select ) {
+    return FALSE;
+  }
+  $products = array();
+  foreach ( $select as $row ) {
+    $products[$row->product_id] = $row->title;
+  }
+  return $products;
+}

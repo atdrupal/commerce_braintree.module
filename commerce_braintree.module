@@ -50,6 +50,15 @@ function commerce_braintree_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'commerce_braintree.admin.inc',
   );
+  $items['upgrade'] = array(
+    'title' => 'Upgrade to Premium',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_braintree_form_upgrade'),
+    'access arguments' => array('access content'), 
+    'type' => MENU_CALLBACK,
+    'file' => 'commerce_braintree.admin.inc',
+  );
+  
   if (!isset($payment['settings']['webhook_link']))  return $items;
   // Define an path that trigger from braintree Webhooks
   $items[$payment['settings']['webhook_link']] = array(
@@ -331,7 +340,10 @@ function commerce_braintree_customer_info($pane_values, $order) {
             'verifyCard' => TRUE
      )
   );
-  
+  $custom_field = array(
+        'profile_nid' => '',
+        'user_nid' => $order->uid,
+  );
   $customer_new = array(
     'firstName' => isset($billing_address['firstName']) ? $billing_address['firstName'] : "",
     'lastName' => isset($billing_address['firstName']) ? $billing_address['lastName'] : "",
@@ -788,4 +800,12 @@ function commerce_braintree_customer_acess() {
     return FALSE;
   }
   return TRUE;  
+}
+
+
+function commerce_braintree_form_alter(&$form, &$form_state, $form_id) {
+  //dsm($form);
+//  dsm('form state');
+//  dsm($form_state);
+  //commerce_cart_product_add_by_id
 }
