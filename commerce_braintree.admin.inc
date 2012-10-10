@@ -386,3 +386,16 @@ function commerce_braintree_product_list($type = 'product') {
   }
   return $products;
 }
+
+/**
+ * Record columns
+ * uid
+ * cid
+ * nid
+ * timestamp
+ * action
+ * @param array $record
+ */
+function commerce_braintree_log_write(array $record) {
+  drupal_write_record ("commerce_braintree_log", $record);
+}

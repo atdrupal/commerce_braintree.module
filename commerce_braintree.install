@@ -81,7 +81,7 @@ function commerce_braintree_add_field($entity_type, $bundle, $label) {
 
 
 function commerce_braintree_schema() {
-  $schema['commerce_briantree_log'] = array(
+  $schema['commerce_braintree_log'] = array(
     'description' => 'The base table transaction logs data sent and received from BrainTree.', 
     'fields' => array(
       'id' => array(
@@ -101,14 +101,14 @@ function commerce_braintree_schema() {
         'description' => 'customer id on braintree.', 
         'type' => 'int', 
         'unsigned' => TRUE, 
-        'not null' => TRUE, 
+        //'not null' => TRUE, 
         'default' => 0,
       ), 
       'nid' => array(
         'description' => 'node id.', 
         'type' => 'int', 
         'unsigned' => TRUE, 
-        'not null' => TRUE, 
+        //'not null' => TRUE, 
         'default' => 0,
       ), 
       'timestamp' => array(
@@ -121,7 +121,14 @@ function commerce_braintree_schema() {
         'description' => 'The action occurred.', 
         'type' => 'varchar', 
         'length' => 255, 
-        'not null' => TRUE, 
+        //'not null' => TRUE, 
+        'default' => '',
+      ),
+      'message' => array(
+        'description' => 'The message description something.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        //'not null' => TRUE, 
         'default' => '',
       ),
     ), 
