@@ -88,6 +88,7 @@ function commerce_braintree_example_form_customer() {
     '#type' => 'textfield',
     '#title' => t('Payment Method Token'),
     '#default_value' => isset($creditcard->token) ? $creditcard->token : '',
+    '#disabled' => TRUE
   );
   $form['billing_address'] = array(
     '#type' => 'fieldset', 
@@ -201,6 +202,7 @@ function commerce_braintree_example_form_customer_submit($form, &$form_state) {
   $customer['email']      = $form_state['values']['c_email'];
   $customer['phone']      = $form_state['values']['c_phone'];
   $customer['fax']        = $form_state['values']['c_fax'];
+  $customer['website']    = $form_state['values']['c_website'];
   $customer['creditCard'] = $creditcard;
   
   $result = commerce_braintree_customer_update($user->uid, $customer, $message);
