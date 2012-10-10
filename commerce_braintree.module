@@ -256,9 +256,9 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     $token = $customer->creditCards[0]->token;
   }
   
-  $sub = commerce_braintree_subscription_get_by_cid($order->uid);
+  $subs = commerce_braintree_subscription_get_by_cid($order->uid);
   
-  if (!$sub) {
+  if ($subs == FALSE) {
     $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
     if ($sub) {
       $status = commerce_braintree_transaction_status($sub->status);
@@ -271,24 +271,26 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     return;
   }
   
-  if ($plan_id != $sub->planId) {
-    $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
-    if ($sub) {
-      $status = commerce_braintree_transaction_status($sub->status);
-    }
-    else {
+  foreach ($subs as $sub) {
+    if ($plan_id == $sub->planId) {
+      $status   = COMMERCE_PAYMENT_STATUS_FAILURE;
+      $message  = check_plain("Current user logged is subscripting to {$plan_id}");
       drupal_set_message($message, 'error');
-      $status = COMMERCE_PAYMENT_STATUS_FAILURE;
+      commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
+      return FALSE;
     }
-    commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
-    return;
   }
   
-  $status   = COMMERCE_PAYMENT_STATUS_FAILURE;
-  $message  = check_plain("Current user logged is subscripting to {$plan_id}");
-  drupal_set_message($message, 'error');
+  $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
+  if ($sub !== FALSE) {
+    $status = commerce_braintree_transaction_status($sub->status);
+  }
+  else {
+    drupal_set_message($message, 'error');
+    $status = COMMERCE_PAYMENT_STATUS_FAILURE;
+  }
   commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
-  return FALSE;
+  return;
 }
 
 /**
@@ -581,12 +583,16 @@ function commerce_braintree_subscription_get_by_cid($cid) {
   $customer = commerce_braintree_customer_get($cid);
   if (!isset($customer->creditCards[0]->subscriptions)) return FALSE;
   $subscriptions = $customer->creditCards[0]->subscriptions;
+  $subs = array();
   foreach ($subscriptions as $subscription) {
     if (strcmp($subscription->status, "Canceled") != 0) {
-      return $subscription;
+      $subs[] = $subscription;
     }
   }
-  return FALSE;
+  if (empty($subs)) {
+    return FALSE;
+  }
+  return $subs;
 }
 
 /**
