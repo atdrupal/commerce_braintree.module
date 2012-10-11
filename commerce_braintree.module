@@ -838,7 +838,8 @@ function commerce_braintree_customer_acess() {
  * @param type $subscription_id
  * @return type
  */
-function commerce_braintree_user_load($subscription_id) {
+function commerce_braintree_user_load_by_sid($sid) {
+  $user = FALSE;
   $sub = commerce_braintree_subscription_get_by_id($subscription_id);
   $cid = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
   $user = user_load($cid);
