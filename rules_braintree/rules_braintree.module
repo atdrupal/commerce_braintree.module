@@ -55,3 +55,19 @@ function rules_braintree_cb_subscription_went_active($user) {
   rules_invoke_event('rules_braintree_event_subscription_went_active', $user);
 }
 
+function rules_braintree_menu() {
+  $items['sub'] = array(
+    'title' => 'sub',
+    'type' => MENU_CALLBACK,
+    'page callback' => 'rules_braintree_sub',
+    'access arguments' => array('access content'), 
+  );
+  return $items;
+}
+function rules_braintree_sub() {
+  $sub = commerce_braintree_subscription_get_by_id ("9vsq2m");
+//$sub = commerce_braintree_subscription_get_by_id ("kfbs8b");
+  //print_r($sub);
+  dpm($sub);
+  return '<h1>asd</h1>';
+}
