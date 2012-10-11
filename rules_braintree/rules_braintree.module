@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * Necessary file for declaring the Rules examples module. See
+ * rules_braintree.rules.inc for the actual rules plugins.
+ */
+
+/**
+ * Implements of hook_cb_subscription_charged_unsuccessfully().
+ */
+function rules_braintree_cb_subscription_canceled($user) {
+  rules_invoke_event('rules_braintree_event_subscription_canceled', $user);
+}
+
+/**
+ * Implements of hook_cb_subscription_charged_unsuccessfully().
+ */
+function rules_braintree_cb_subscription_charged_successfully($user) {
+  rules_invoke_event('rules_braintree_event_subscription_charged_successfully', $user);
+}
+
+/**
+ * Implements of hook_cb_subscription_charged_unsuccessfully().
+ */
+function rules_braintree_cb_subscription_charged_unsuccessfully($user) {
+  rules_invoke_event('rules_braintree_event_subscription_charged_unsuccessfully', $user);
+}
+
+/**
+ * Implements of hook_cb_subscription_expired().
+ */
+function rules_braintree_cb_subscription_expired($user) {
+  rules_invoke_event('rules_braintree_event_subscription_expired', $user);
+}
+
+/**
+ * Implements of hook_cb_subscription_trial_ended().
+ */
+function rules_braintree_cb_subscription_trial_ended($user) {
+  rules_invoke_event('rules_braintree_event_subscription_trial_ended', $user);
+}
+
+/**
+ * Implements of hook_cb_subscription_went_past_due().
+ */
+function rules_braintree_cb_subscription_went_past_due($user) {
+  rules_invoke_event('rules_braintree_event_subscription_went_past_due', $user);
+}
+
+/**
+ * Implements of hook_cb_subscription_went_active().
+ */
+function rules_braintree_cb_subscription_went_active($user) {
+  rules_invoke_event('rules_braintree_event_subscription_went_active', $user);
+}
+

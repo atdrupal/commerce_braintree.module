@@ -98,14 +98,21 @@ function commerce_braintree_schema() {
         'default' => 0,
       ), 
       'cid' => array(
-        'description' => 'customer id on braintree.', 
+        'description' => 'Customer id on braintree.', 
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        //'not null' => TRUE, 
+        'default' => 0,
+      ), 
+      'sid' => array(
+        'description' => 'Subscription id on braintree.', 
         'type' => 'int', 
         'unsigned' => TRUE, 
         //'not null' => TRUE, 
         'default' => 0,
       ), 
       'nid' => array(
-        'description' => 'node id.', 
+        'description' => 'Node id.', 
         'type' => 'int', 
         'unsigned' => TRUE, 
         //'not null' => TRUE, 

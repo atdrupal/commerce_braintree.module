@@ -406,15 +406,22 @@ function commerce_braintree_customer_create($customer, &$message = "") {
   if ($load == FALSE) {    
     return FALSE;  
   }
+  $cid = -1;
+  $nid = commerce_braintree_product_id();
+  $action = 'Create customer';
   //create customer
   $customer = Braintree_Customer::create($customer);
   if ($customer->success) {
+    $message = "Customer was created.";
+    $cid = $customer->customer->id;
+    commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
     return $customer;
   } 
   
   foreach ($customer->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
+  commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
   return FALSE;
 }
 
@@ -430,16 +437,20 @@ function commerce_braintree_customer_update($cid, array $info, &$message) {
   if ($load == FALSE) {    
     return FALSE;  
   }
+  $action = 'Update customer';
+  $nid = commerce_braintree_product_id();
   //update customer
   $customer = Braintree_Customer::update($cid, $info);
   if ($customer->success) {
     $message = 'update successfull';
+    commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
     return $customer;
   } 
   
   foreach ($customer->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
+  commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
   return FALSE;
 }
 
@@ -482,7 +493,7 @@ function commerce_braintree_customer_get_by_token($token) {
     //we have a not found exception!
     $customer = FALSE;
   }
-  return $customer;
+  return $customer->_ids[0];
 }
 
 /**
@@ -543,17 +554,21 @@ function commerce_braintree_subscription_create($token, $plan_id, &$message = ""
   if ($load == FALSE) {    
     return FALSE;  
   }
+  $action = 'create subscription';
+  $nid = commerce_braintree_product_id();
   $sub = Braintree_Subscription::create(array(
     'paymentMethodToken' => $token,
     'planId' => $plan_id
   ));
   if ($sub->success) {
     $message = "Transaction is successsfull";
+    commerce_braintree_log_write(0, 0, $sub->id, $nid, $action,$message);
     return $sub;
   }
   foreach ($sub->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
+  commerce_braintree_log_write(0, 0, 0,$nid, $action,$message);
   return FALSE;
 }
 
@@ -568,10 +583,12 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
   if ($load == FALSE) {    
     return FALSE;  
   }
+  $action = 'cancel subscription';
   try {
     $result = Braintree_Subscription::cancel($subscription_id);
     if ($result->success) {
       $message = "Subscription {$subscription_id} was canceled!";
+      commerce_braintree_log_write(0, 0, $subscription_id, 0, $action,$message);
       return TRUE;
     }
     foreach ($result->errors->deepAll() AS $error) {
@@ -582,6 +599,7 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
     //we have a not found exception!
     $message = $e->getMessage();
   }
+  commerce_braintree_log_write(0, 0, $subscription_id, $nid, $action,$message);
   return FALSE;
 }
 
@@ -718,6 +736,19 @@ function commerce_braintree_product_get_by_order($order) {
   return $op;
 }
 
+function commerce_braintree_product_id() {
+  global $user;
+  $order = commerce_cart_order_load(1);
+  if (!empty($order->commerce_line_items)) {
+    return 0;
+  }
+  $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
+  $line_item = commerce_line_item_load($line_item_id);
+  $pid = $line_item->commerce_product['und']['0']['product_id'];
+  $op = commerce_product_load($pid);
+  return $op->product_id;
+}
+
 /**
  * Implements hook_field_attach_validate()
  * Validate field plan id
@@ -802,6 +833,17 @@ function commerce_braintree_customer_acess() {
   return TRUE;  
 }
 
+/**
+ * Load user by subscripton id
+ * @param type $subscription_id
+ * @return type
+ */
+function commerce_braintree_user_load($subscription_id) {
+  $sub = commerce_braintree_subscription_get_by_id($subscription_id);
+  $cid = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
+  $user = user_load($cid);
+  return $user;
+}
 
 function commerce_braintree_form_alter(&$form, &$form_state, $form_id) {
   //dsm($form);

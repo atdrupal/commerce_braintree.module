@@ -37,31 +37,40 @@ function commerce_braintree_hooks() {
   
   $kind = $webhookNotification->kind;
   $sid  = $webhookNotification->subscription->id;
+  $user = user_load(1);
+  //$user = commerce_braintree_user_load($sid);
   switch ($kind) {
     case Braintree_WebhookNotification::SUBSCRIPTION_CANCELED:
-      module_invoke_all('cb_subscription_canceled', $kind, $sid);
+      module_invoke_all('cb_subscription_canceled', $user);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_CHARGED_SUCCESSFULLY:
-      module_invoke_all('cb_subscription_charged_successfully', $kind, $sid);
+      module_invoke_all('cb_subscription_charged_successfully', $user);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_CHARGED_UNSUCCESSFULLY:
-      module_invoke_all('cb_subscription_charged_unsuccessfully', $kind, $sid);
+      module_invoke_all('cb_subscription_charged_unsuccessfully', $user);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_EXPIRED:
-      module_invoke_all('cb_subscription_expired', $kind, $sid);
+      module_invoke_all('cb_subscription_expired', $user);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_TRIAL_ENDED:
-      module_invoke_all('cb_subscription_trial_ended', $kind, $sid);
+      module_invoke_all('cb_subscription_trial_ended', $user);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_WENT_ACTIVE:
-      module_invoke_all('cb_subscription_went_active', $kind, $sid);
+      module_invoke_all('cb_subscription_went_active', $user);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_WENT_PAST_DUE:
-      module_invoke_all('cb_subscription_went_past_due', $kind, $sid);
+      module_invoke_all('cb_subscription_went_past_due', $user);
       break;
   }
+  commerce_braintree_webhook_log($kind, $sid);
   watchdog('braintree', 'Commerce braintree occur %action .', array('%action' => $webhookNotification->kind));
 }
+function commerce_braintree_webhook_log($kind, $sid) {
+  $sub = commerce_braintree_subscription_get_by_id($sid);
+  $cid = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
+  commerce_braintree_log_write($cid, $cid, $sid,0, 'webhook callback',$kind);
+}
+
 
 /**
  * Cancel braintree recurring billing by uid and plan id
@@ -396,6 +405,20 @@ function commerce_braintree_product_list($type = 'product') {
  * action
  * @param array $record
  */
-function commerce_braintree_log_write(array $record) {
+function commerce_braintree_log_write($uid = 0, $cid = 0, $sid = NULL, $nid, $action, $message) {
+  global $user;
+  if ($uid == 0) {
+    $uid = $user->uid;
+  }
+  if ($cid == 0) {
+    $cid = $user->uid;
+  }
+  $record = array();
+  $record['uid'] = $uid;
+  $record['cid'] = $cid;
+  $record['nid'] = $nid;
+  $record['action'] = $action;
+  $record['timestamp'] = REQUEST_TIME;
+  $record['message'] = $message;
   drupal_write_record ("commerce_braintree_log", $record);
 }

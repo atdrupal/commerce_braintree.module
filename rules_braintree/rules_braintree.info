@@ -1,0 +1,8 @@
+name = Rules Braintree
+description = "Braintree webhook invoke the rules events"
+package = "Viet Coop"
+dependencies[] = "rules"
+dependencies[] = "commerce_braintree"
+
+core = 7.x
+version = 7.x-1.0-beta1
