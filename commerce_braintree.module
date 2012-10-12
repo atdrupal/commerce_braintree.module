@@ -19,15 +19,30 @@ function commerce_braintree_menu() {
     'weight' => -10,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
-  $items['user/%/orders/%commerce_order/subscription'] = array(
+  $items['user/%user/subscription'] = array(
     'title' => 'Subscription',
     'page callback' => 'commerce_braintree_subscription_view',
-    'page arguments' => array(3),
-    'access callback' => 'commerce_order_customer_order_view_access',
-    'access arguments' => array(3),
+    'page arguments' => array(1),
+    'access callback' => 'commerce_braintree_customer_acess',
+    'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'commerce_braintree.admin.inc',
+  );
+  $items['user/%user/subscription/overview'] = array(
+    'title' => 'Subscription',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  
+  $items['user/%user/subscription/customer'] = array(
+    'title' => 'Customer recurring billing',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_braintree_form_customer',1),
+    'access callback' => 'commerce_braintree_customer_acess',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
     'file' => 'commerce_braintree.admin.inc',
   );
   
@@ -39,15 +54,6 @@ function commerce_braintree_menu() {
     'access callback' => 'commerce_braintree_page_cancel_access',
     'access arguments' => array(1), 
     'type' => MENU_CALLBACK,
-    'file' => 'commerce_braintree.admin.inc',
-  );
-  
-  $items['user/%user/customer'] = array(
-    'title' => 'Customer recurring billing',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_form_customer'),
-    'access callback' => 'commerce_braintree_customer_acess',
-    'type' => MENU_LOCAL_TASK,
     'file' => 'commerce_braintree.admin.inc',
   );
   $items['upgrade'] = array(
@@ -827,8 +833,7 @@ function commerce_braintree_get_orders_by_uid($uid) {
  * @global type $user
  * @return boolean
  */
-function commerce_braintree_customer_acess() {
-  global $user;
+function commerce_braintree_customer_acess($user) {
   if (!commerce_braintree_customer_get($user->uid)) {
     return FALSE;
   }

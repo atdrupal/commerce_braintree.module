@@ -147,8 +147,8 @@ function commerce_braintree_subscription_cron() {
 }
 
 function commerce_braintree_subscription_transaction_get() {
-  $past = variable_set('commerce_braintree_subscription');
-  $period = format_interval(abs(REQUEST_TIME - $past));
+  $last_cron = variable_set('commerce_braintree_subscription');
+  $period = format_interval(abs(REQUEST_TIME - $last_cron));
   $now = new Datetime();
   $past = clone $now;
   $past = $past->modify("-{$period}");
@@ -167,4 +167,14 @@ function commerce_braintree_subscription_transaction_get() {
     $count += $updated;
   }
   watchdog('braintree', 'Sync transaction success. Total @count updated', array('@count' => $count), WATCHDOG_ERROR);
+}
+
+
+function commerce_braintree_subscription_load($uid) {
+  $result = db_select('commerce_braintree_subscription', 'c')
+    ->fields('c')
+    ->condition('uid', $uid)
+    ->execute()
+    ->fetchAssoc();
+  return $result;
 }

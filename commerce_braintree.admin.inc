@@ -33,10 +33,10 @@ function commerce_braintree_hooks() {
     return FALSE;
   }
   
-  $webhookNotification = Braintree_WebhookNotification::parse($bt_signature_param, $bt_payload_param);
+  $web_hook = Braintree_WebhookNotification::parse($bt_signature_param, $bt_payload_param);
   
-  $kind = $webhookNotification->kind;
-  $sid  = $webhookNotification->subscription->id;
+  $kind = $web_hook->kind;
+  $sid  = $web_hook->subscription->id;
   $user = commerce_braintree_user_load($sid);
   commerce_braintree_callback_hook($kind, $user, $sid);
   commerce_braintree_webhook_log($kind, $sid);
@@ -136,15 +136,31 @@ function commerce_braintree_subscription_view($order) {
                                  'rows'   => $rows ));
   return $output;
 }
+/**
+ * View status subscription on order
+ * @param type $order
+ * @return type
+ */
+function commerce_braintree_subscription_overview($user) {
+  
+ 
+  $rows = commerce_braintree_subscription_load($user->uid);
+  dsm($rows);return '<div>Faile</div>';
+  foreach ($rows as $key => $value)
+  $header   = array('Title', 'Price', 'Status', 'Operation');
+  $plan_id  = commerce_braintree_planid_get($order);
+  $rows[] = array($op->title, $price, $status, l(t("cancel"), "braintree/{$plan_id}/uid/{$order->uid}/cancel"));
+  $output = theme('table', array('header' => $header,
+                                 'rows'   => $rows ));
+  return $output;
+}
 
 /**
  * Define form edit for customer
  * @global type $user
  * @return string
  */
-function commerce_braintree_form_customer() {
-  
-  global $user;
+function commerce_braintree_form_customer($form, &$form_state, $user) {
   $customer = commerce_braintree_customer_get($user->uid);
   if (is_object($customer)) {
     $creditcard = $customer->creditCards[0];
@@ -155,8 +171,6 @@ function commerce_braintree_form_customer() {
     $creditcard = array();
     $billing_address = array();
   }
-  
-  $form = array();
   
   $form['customer'] = array(
     '#type' => 'fieldset', 
