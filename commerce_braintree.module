@@ -21,7 +21,7 @@ function commerce_braintree_menu() {
   );
   $items['user/%user/subscription'] = array(
     'title' => 'Subscription',
-    'page callback' => 'commerce_braintree_subscription_view',
+    'page callback' => 'commerce_braintree_subscription_overview',
     'page arguments' => array(1),
     'access callback' => 'commerce_braintree_customer_acess',
     'access arguments' => array(1),
@@ -265,18 +265,19 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
       commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
       return FALSE;
     }
+    
     $token = $customer->customer->creditCards[0]->token;
   }
   else {
     $token = $customer->creditCards[0]->token;
   }
-  
+
   //Get all subsription user in order
   $subs = commerce_braintree_subscription_get_by_cid($order->uid);
-  
   //If not found. Create new
   if ($subs == FALSE) {
-    $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
+    $sub = commerce_braintree_subscription_create($order->order_id, $token, $plan_id, $message);
+//    dsm($sub . "dasdasdasdas");return FALSE;
     if ($sub !== FALSE) {
       $status = COMMERCE_PAYMENT_STATUS_SUCCESS;
     }
@@ -299,7 +300,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     }
   }
   //Create new subscription if it don't duplicate
-  $sub = commerce_braintree_subscription_create($token, $plan_id, $message);
+  $sub = commerce_braintree_subscription_create($order->order_id, $token, $plan_id, $message);
   if ($sub !== FALSE) {
     $status = COMMERCE_PAYMENT_STATUS_SUCCESS;
   }
@@ -412,23 +413,21 @@ function commerce_braintree_customer_create($customer, &$message = "") {
   if ($load == FALSE) {    
     return FALSE;  
   }
-  $cid = -1;
-  $nid = commerce_braintree_product_id();
+  $nid = commerce_braintree_product_id(0);
   $action = 'Create customer';
   //create customer
   $customer = Braintree_Customer::create($customer);
   if ($customer->success) {
     $message = "Customer was created.";
-    $cid = $customer->customer->id;
-    commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
+    commerce_braintree_log_write(0, 0, $nid, $action, $message);
     return $customer;
   } 
   
   foreach ($customer->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
-  commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
-  return FALSE;
+  commerce_braintree_log_write(0, 0, $nid, $action, $message);
+  return FALSE; 
 }
 
 /**
@@ -444,19 +443,19 @@ function commerce_braintree_customer_update($cid, array $info, &$message) {
     return FALSE;  
   }
   $action = 'Update customer';
-  $nid = commerce_braintree_product_id();
+  $nid = commerce_braintree_product_id(0);
   //update customer
   $customer = Braintree_Customer::update($cid, $info);
   if ($customer->success) {
     $message = 'update successfull';
-    commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
+    commerce_braintree_log_write(0, 0, $nid, $action,$message);
     return $customer;
   } 
   
   foreach ($customer->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
-  commerce_braintree_log_write(0, $cid, 0,$nid, $action,$message);
+  commerce_braintree_log_write(0, 0, $nid, $action,$message);
   return FALSE;
 }
 
@@ -561,22 +560,24 @@ function commerce_braintree_subscription_create($order_id, $token, $plan_id, &$m
     return FALSE;  
   }
   $action = 'create subscription';
-  $nid = commerce_braintree_product_id();
+  $nid = commerce_braintree_product_id(0);
   $sub = Braintree_Subscription::create(array(
     'paymentMethodToken' => $token,
     'planId' => $plan_id
   ));
+  
   if ($sub->success) {
     $message = "Transaction is successsfull";
     //callback for hook cb_subscription_create
-    module_invoke_all('cb_subscription_create', $order_id, $sub->id, $sub->status);
-    commerce_braintree_log_write(0, 0, $sub->id, $nid, $action,$message);
+    commerce_braintree_log_write(0, $sub->subscription->id, $nid, $action, $message);
+    module_invoke_all('cb_subscription_create', $order_id, $sub->subscription->id, $sub->subscription->status);
+    
     return $sub;
   }
   foreach ($sub->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
-  commerce_braintree_log_write(0, 0, 0,$nid, $action,$message);
+  commerce_braintree_log_write(0, 0, $nid, $action, $message);
   return FALSE;
 }
 
@@ -596,7 +597,7 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
     $result = Braintree_Subscription::cancel($subscription_id);
     if ($result->success) {
       $message = "Subscription {$subscription_id} was canceled!";
-      commerce_braintree_log_write(0, 0, $subscription_id, 0, $action,$message);
+      commerce_braintree_log_write(0, $subscription_id, 0, $action, $message);
       return TRUE;
     }
     foreach ($result->errors->deepAll() AS $error) {
@@ -607,7 +608,7 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
     //we have a not found exception!
     $message = $e->getMessage();
   }
-  commerce_braintree_log_write(0, 0, $subscription_id, $nid, $action,$message);
+  commerce_braintree_log_write(0, $subscription_id, $nid, $action, $message);
   return FALSE;
 }
 
@@ -744,10 +745,14 @@ function commerce_braintree_product_get_by_order($order) {
   return $op;
 }
 
-function commerce_braintree_product_id() {
+function commerce_braintree_product_id($uid) {
   global $user;
-  $order = commerce_cart_order_load(1);
-  if (!empty($order->commerce_line_items)) {
+  if ($uid == 0) {
+    $uid = $user->uid;
+  }
+  $order = commerce_cart_order_load($uid);
+  dsm($order);
+  if (empty($order->commerce_line_items)) {
     return 0;
   }
   $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
@@ -860,3 +865,26 @@ function commerce_braintree_form_alter(&$form, &$form_state, $form_id) {
   //commerce_cart_product_add_by_id
 }
 
+/**
+ * Record columns
+ * uid
+ * cid
+ * nid
+ * timestamp
+ * action
+ * @param array $record
+ */
+function commerce_braintree_log_write($uid, $sid, $nid, $action, $message) {
+  global $user;
+  if ($uid == 0) {
+    $uid = $user->uid;
+  }
+  $record = array();
+  $record['uid'] = $uid;
+  $record['sid'] = $sid;
+  $record['nid'] = $nid;
+  $record['action'] = $action;
+  $record['timestamp'] = REQUEST_TIME;
+  $record['message'] = $message;
+  drupal_write_record ("commerce_braintree_log", $record);
+}

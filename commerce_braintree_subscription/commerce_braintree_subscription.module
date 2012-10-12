@@ -171,10 +171,16 @@ function commerce_braintree_subscription_transaction_get() {
 
 
 function commerce_braintree_subscription_load($uid) {
-  $result = db_select('commerce_braintree_subscription', 'c')
+  $select = db_select('commerce_braintree_subscription', 'c')
     ->fields('c')
     ->condition('uid', $uid)
-    ->execute()
-    ->fetchAssoc();
+    ->execute();
+  if (!$select) {
+    return FALSE;
+  }
+  $result = array();
+  foreach ($select as $values) {
+    $result[] = $values;
+  }
   return $result;
 }

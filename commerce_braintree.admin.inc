@@ -142,14 +142,50 @@ function commerce_braintree_subscription_view($order) {
  * @return type
  */
 function commerce_braintree_subscription_overview($user) {
-  
- 
   $rows = commerce_braintree_subscription_load($user->uid);
-  dsm($rows);return '<div>Faile</div>';
-  foreach ($rows as $key => $value)
-  $header   = array('Title', 'Price', 'Status', 'Operation');
+  dsm($rows);return "<h4>Don't data<h4>";
+  if ($rows == FALSE) {
+    return "<h4>Don't data<h4>";
+  }
+    
+  foreach ($rows as $row) {
+    $order = commerce_order_load($row->order_id);
+    $product = commerce_braintree_product_get_by_order($order);
+    $sub = commerce_braintree_subscription_get_by_cid($row->cid);
+    if ($sub->status != $row->status) {
+      commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
+    }
+    $status = $sub->status;
+    $price = $sub->price;
+    $plan_id = $sub->planId;
+    $first_billing_date = $sub->firstBillingDate->date;
+    $next_billing_date = $sub->nextBillingDate->date;
+    $billing_period_start_date = $sub->billingPeriodStartDate->date;
+    $billing_period_end_date = $sub->billingPeriodEndDate->date;
+    $paid_through_date = $sub->paidThroughDate->date;
+    $next_bill_amount = $sub->nextBillAmount;
+    $rows[] = array($product->title, 
+                    $price,
+                    $first_billing_date,
+                    $billing_period_start_date . ' - ' . $billing_period_end_date,
+                    $paid_through_date,
+                    $next_billing_date,
+                    $next_bill_amount,
+                    $status, 
+                    l(t("cancel"), "braintree/{$plan_id}/uid/{$row->uid}/cancel"));
+  }
+    
+  $header = array('Title', 
+                  'Price',
+                  'First Bill Date',
+                  'Current Billing Period',
+                  'Paid Through Date',
+                  'Next Bill Date',
+                  'Next Billing Period Amount', 
+                  'Status', 
+                  'Operation');
   $plan_id  = commerce_braintree_planid_get($order);
-  $rows[] = array($op->title, $price, $status, l(t("cancel"), "braintree/{$plan_id}/uid/{$order->uid}/cancel"));
+  
   $output = theme('table', array('header' => $header,
                                  'rows'   => $rows ));
   return $output;
@@ -407,7 +443,7 @@ function commerce_braintree_form_upgrade_submit($form, &$form_state) {
  * @param type $type
  * @return boolean
  */
-function commerce_braintree_product_list($type = 'product') {
+function commerce_braintree_product_list($type = 'commerce_sp_subscription') {
   $select = db_select('commerce_product', 'c')
             ->fields('c')
             ->condition('type', $type)
@@ -422,29 +458,3 @@ function commerce_braintree_product_list($type = 'product') {
   return $products;
 }
 
-/**
- * Record columns
- * uid
- * cid
- * nid
- * timestamp
- * action
- * @param array $record
- */
-function commerce_braintree_log_write($uid = 0, $cid = 0, $sid = NULL, $nid, $action, $message) {
-  global $user;
-  if ($uid == 0) {
-    $uid = $user->uid;
-  }
-  if ($cid == 0) {
-    $cid = $user->uid;
-  }
-  $record = array();
-  $record['uid'] = $uid;
-  $record['cid'] = $cid;
-  $record['nid'] = $nid;
-  $record['action'] = $action;
-  $record['timestamp'] = REQUEST_TIME;
-  $record['message'] = $message;
-  drupal_write_record ("commerce_braintree_log", $record);
-}

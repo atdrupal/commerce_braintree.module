@@ -65,9 +65,18 @@ function rules_braintree_menu() {
   return $items;
 }
 function rules_braintree_sub() {
-  $sub = commerce_braintree_subscription_get_by_id ("9vsq2m");
+  
+// $sub =  commerce_braintree_product_id(0);
+  $sub = commerce_order_load(22);
+//  $sub = commerce_braintree_subscription_get_by_id ("hh7pdb");
 //$sub = commerce_braintree_subscription_get_by_id ("kfbs8b");
+//commerce_braintree_log_write(9, 9, 9, "asdascallback", 'test');
   //print_r($sub);
+  $product = commerce_braintree_product_get_by_order($sub);
   dpm($sub);
+  dpm($product);
+//  module_load_include('inc', 'commerce_braintree', 'commerce_braintree.admin');
+//  $user = user_load(1);
+//  commerce_braintree_subscription_overview($user);
   return '<h1>asd</h1>';
 }
