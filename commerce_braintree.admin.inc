@@ -38,6 +38,12 @@ function commerce_braintree_hooks() {
   $kind = $webhookNotification->kind;
   $sid  = $webhookNotification->subscription->id;
   $user = commerce_braintree_user_load($sid);
+  commerce_braintree_callback_hook($kind, $user, $sid);
+  commerce_braintree_webhook_log($kind, $sid);
+  watchdog('braintree', 'Commerce braintree occur %action .', array('%action' => $webhookNotification->kind));
+}
+
+function commerce_braintree_callback_hook($kind, $user, $sid) {
   switch ($kind) {
     case Braintree_WebhookNotification::SUBSCRIPTION_CANCELED:
       module_invoke_all('cb_subscription_canceled', $user, $sid);
@@ -61,8 +67,6 @@ function commerce_braintree_hooks() {
       module_invoke_all('cb_subscription_went_past_due', $user, $sid);
       break;
   }
-  commerce_braintree_webhook_log($kind, $sid);
-  watchdog('braintree', 'Commerce braintree occur %action .', array('%action' => $webhookNotification->kind));
 }
 
 
