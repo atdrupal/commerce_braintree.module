@@ -445,7 +445,7 @@ function commerce_braintree_form_upgrade_submit($form, &$form_state) {
  * @param type $type
  * @return boolean
  */
-function commerce_braintree_product_list($type = 'commerce_sp_subscription') {
+function commerce_braintree_product_list($type = 'product') {
   $select = db_select('commerce_product', 'c')
             ->fields('c')
             ->condition('type', $type)
