@@ -142,49 +142,51 @@ function commerce_braintree_subscription_view($order) {
  * @return type
  */
 function commerce_braintree_subscription_overview($user) {
-  $rows = commerce_braintree_subscription_load($user->uid);
-  dsm($rows);return "<h4>Don't data<h4>";
-  if ($rows == FALSE) {
+  $resluts = commerce_braintree_subscription_load($user->uid);
+  if ($resluts == FALSE) {
     return "<h4>Don't data<h4>";
   }
-    
-  foreach ($rows as $row) {
+  $rows []= array();
+  foreach ($resluts as $row) {
     $order = commerce_order_load($row->order_id);
     $product = commerce_braintree_product_get_by_order($order);
-    $sub = commerce_braintree_subscription_get_by_cid($row->cid);
+    $sub = commerce_braintree_subscription_get_by_id($row->sid);
+//    dsm($sub);
+//    dsm($row->sid);
     if ($sub->status != $row->status) {
       commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
     }
     $status = $sub->status;
     $price = $sub->price;
     $plan_id = $sub->planId;
-    $first_billing_date = $sub->firstBillingDate->date;
-    $next_billing_date = $sub->nextBillingDate->date;
-    $billing_period_start_date = $sub->billingPeriodStartDate->date;
-    $billing_period_end_date = $sub->billingPeriodEndDate->date;
-    $paid_through_date = $sub->paidThroughDate->date;
+    $first_billing_date = $sub->firstBillingDate->format('m/d/Y');
+    $next_billing_date = $sub->nextBillingDate->format('m/d/Y');
+    $billing_period_start_date = $sub->billingPeriodStartDate->format('m/d/Y');
+    $billing_period_end_date = $sub->billingPeriodEndDate->format('m/d/Y');
+    $paid_through_date = $sub->paidThroughDate->format('m/d/Y');
     $next_bill_amount = $sub->nextBillAmount;
     $rows[] = array($product->title, 
-                    $price,
-                    $first_billing_date,
-                    $billing_period_start_date . ' - ' . $billing_period_end_date,
-                    $paid_through_date,
-                    $next_billing_date,
-                    $next_bill_amount,
-                    $status, 
-                    l(t("cancel"), "braintree/{$plan_id}/uid/{$row->uid}/cancel"));
+                $price,
+                $first_billing_date,
+                $billing_period_start_date . ' - ' . $billing_period_end_date,
+                $paid_through_date,
+                $next_billing_date,
+                $next_bill_amount,
+                $status, 
+                l(t("cancel"), "braintree/{$plan_id}/uid/{$row->uid}/cancel")
+              );
   }
     
   $header = array('Title', 
-                  'Price',
-                  'First Bill Date',
-                  'Current Billing Period',
-                  'Paid Through Date',
-                  'Next Bill Date',
-                  'Next Billing Period Amount', 
-                  'Status', 
-                  'Operation');
-  $plan_id  = commerce_braintree_planid_get($order);
+              'Price',
+              'First Bill Date',
+              'Current Billing Period',
+              'Paid Through Date',
+              'Next Bill Date',
+              'Next Billing Period Amount', 
+              'Status', 
+              'Operation'
+            );
   
   $output = theme('table', array('header' => $header,
                                  'rows'   => $rows ));
