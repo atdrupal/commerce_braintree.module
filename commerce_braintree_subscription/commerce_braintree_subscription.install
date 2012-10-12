@@ -1,0 +1,60 @@
+<?php
+/**
+ * @file
+ */
+
+
+function commerce_braintree_subscription_schema() {
+  $schema['commerce_braintree_subscription'] = array(
+    'description' => 'The base table save subscription.', 
+    'fields' => array(
+      'uid' => array(
+        'description' => 'The user id.', 
+        'type' => 'serial', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE,
+      ), 
+      'sid' => array(
+        'description' => 'The Subscription id.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        'not null' => TRUE, 
+      ), 
+      'order_id' => array(
+        'description' => 'Customer id on braintree.', 
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        //'not null' => TRUE, 
+        'default' => 0,
+      ), 
+      'status' => array(
+        'description' => 'Subscription id on braintree.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        //'not null' => TRUE, 
+        'default' => 0,
+      ), 
+      'created' => array(
+        'description' => 'The Unix timestamp at create.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'last_update' => array(
+        'description' => 'The Unix timestamp at last update.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      
+    ), 
+    'foreign keys' => array(
+      'uid' => array(
+        'table' => 'users', 
+        'columns' => array('uid' => 'uid'),
+      ),
+    ), 
+    'primary key' => array('uid', 'sid'),
+  );
+  return $schema;
+}

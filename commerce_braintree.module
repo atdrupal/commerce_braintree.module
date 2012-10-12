@@ -548,7 +548,7 @@ function commerce_braintree_customer_delete_all() {
  * @param type $plan_id
  * @return type 
  */
-function commerce_braintree_subscription_create($token, $plan_id, &$message = "") {
+function commerce_braintree_subscription_create($order_id, $token, $plan_id, &$message = "") {
   //Initializes the Braintree Library
   $load = commerce_braintree_initialize_library();
   if ($load == FALSE) {    
@@ -562,6 +562,8 @@ function commerce_braintree_subscription_create($token, $plan_id, &$message = ""
   ));
   if ($sub->success) {
     $message = "Transaction is successsfull";
+    //callback for hook cb_subscription_create
+    module_invoke_all('cb_subscription_create', $order_id, $sub->id, $sub->status);
     commerce_braintree_log_write(0, 0, $sub->id, $nid, $action,$message);
     return $sub;
   }
@@ -840,7 +842,7 @@ function commerce_braintree_customer_acess() {
  */
 function commerce_braintree_user_load_by_sid($sid) {
   $user = FALSE;
-  $sub = commerce_braintree_subscription_get_by_id($subscription_id);
+  $sub = commerce_braintree_subscription_get_by_id($sid);
   $cid = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
   $user = user_load($cid);
   return $user;
@@ -852,3 +854,4 @@ function commerce_braintree_form_alter(&$form, &$form_state, $form_id) {
 //  dsm($form_state);
   //commerce_cart_product_add_by_id
 }
+

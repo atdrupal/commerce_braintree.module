@@ -55,28 +55,28 @@ function commerce_braintree_add_field($entity_type, $bundle, $label) {
     );
     $field = field_create_field($field);
   }
-  if (empty($instance)) {
-    $instance = array(
-      'field_name' => 'field_braintree_planid', 
-      'entity_type' => $entity_type, 
-      'bundle' => $bundle, 
-      'label' => $label, 
-      'widget' => array(
-        'type' => 'text_textfield',
-        'settings' => array(
-          'size' => 60, // default
-        ),
-      ), 
-      'display' => array(
-        'default' => array(
-          'label' => 'hidden', 
-          'type' => 'text_default',
-        ), 
-      ),
-    );
-    $instance = field_create_instance($instance);
-  }
-  return $instance;
+//  if (empty($instance)) {
+//    $instance = array(
+//      'field_name' => 'field_braintree_planid', 
+//      'entity_type' => $entity_type, 
+//      'bundle' => $bundle, 
+//      'label' => $label, 
+//      'widget' => array(
+//        'type' => 'text_textfield',
+//        'settings' => array(
+//          'size' => 60, // default
+//        ),
+//      ), 
+//      'display' => array(
+//        'default' => array(
+//          'label' => 'hidden', 
+//          'type' => 'text_default',
+//        ), 
+//      ),
+//    );
+//    $instance = field_create_instance($instance);
+//  }
+//  return $instance;
 }
 
 
@@ -97,17 +97,10 @@ function commerce_braintree_schema() {
         'not null' => TRUE, 
         'default' => 0,
       ), 
-      'cid' => array(
-        'description' => 'Customer id on braintree.', 
-        'type' => 'int', 
-        'unsigned' => TRUE, 
-        //'not null' => TRUE, 
-        'default' => 0,
-      ), 
       'sid' => array(
         'description' => 'Subscription id on braintree.', 
-        'type' => 'int', 
-        'unsigned' => TRUE, 
+        'type' => 'varchar', 
+        'length' => 255, 
         //'not null' => TRUE, 
         'default' => 0,
       ), 

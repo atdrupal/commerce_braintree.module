@@ -40,25 +40,25 @@ function commerce_braintree_hooks() {
   $user = commerce_braintree_user_load($sid);
   switch ($kind) {
     case Braintree_WebhookNotification::SUBSCRIPTION_CANCELED:
-      module_invoke_all('cb_subscription_canceled', $user);
+      module_invoke_all('cb_subscription_canceled', $user, $sid);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_CHARGED_SUCCESSFULLY:
-      module_invoke_all('cb_subscription_charged_successfully', $user);
+      module_invoke_all('cb_subscription_charged_successfully', $user, $sid);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_CHARGED_UNSUCCESSFULLY:
-      module_invoke_all('cb_subscription_charged_unsuccessfully', $user);
+      module_invoke_all('cb_subscription_charged_unsuccessfully', $user, $sid);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_EXPIRED:
-      module_invoke_all('cb_subscription_expired', $user);
+      module_invoke_all('cb_subscription_expired', $user, $sid);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_TRIAL_ENDED:
-      module_invoke_all('cb_subscription_trial_ended', $user);
+      module_invoke_all('cb_subscription_trial_ended', $user, $sid);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_WENT_ACTIVE:
-      module_invoke_all('cb_subscription_went_active', $user);
+      module_invoke_all('cb_subscription_went_active', $user, $sid);
       break;
     case Braintree_WebhookNotification::SUBSCRIPTION_WENT_PAST_DUE:
-      module_invoke_all('cb_subscription_went_past_due', $user);
+      module_invoke_all('cb_subscription_went_past_due', $user, $sid);
       break;
   }
   commerce_braintree_webhook_log($kind, $sid);
