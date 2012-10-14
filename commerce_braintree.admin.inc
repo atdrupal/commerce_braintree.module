@@ -29,7 +29,7 @@ function commerce_braintree_hooks() {
   $bt_signature_param = $_POST["bt_signature"];
   
   if (!isset($bt_signature_param) || !isset($bt_signature_param)) {
-    watchdog('braintree', 'Commerce braintree no recive webhook data.', array('%action' => $verify));
+    watchdog('braintree', 'Commerce braintree no recive webhook data.');
     return FALSE;
   }
   
