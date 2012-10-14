@@ -10,14 +10,15 @@
  * Implements hook_rules_event_info().
  */
 function rules_braintree_rules_event_info() {
+  $events = array();
   $variables = array(
-    'customer' => array(
+    'account' => array(
       'type' => 'user',
-      'label' => t('Custommer ID'),
+      'label' => t('Custommer'),
     ),
     'subscription_id' => array(
       'type' => 'text',
-      'label' => t('subscription_id'),
+      'label' => t('subscription id'),
     ),
   );
   $events['rules_braintree_event_subscription_canceled'] = array(
