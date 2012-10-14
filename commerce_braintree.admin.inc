@@ -37,10 +37,11 @@ function commerce_braintree_hooks() {
   
   $kind = $web_hook->kind;
   $sid  = $web_hook->subscription->id;
+  watchdog('braintree', 'Commerce braintree occur %kind .', array('%kind' => $kind));
   $user = commerce_braintree_user_load($sid);
   commerce_braintree_callback_hook($kind, $user, $sid);
   commerce_braintree_webhook_log($kind, $sid);
-  watchdog('braintree', 'Commerce braintree occur %kind .', array('%kind' => $kind));
+  
 }
 
 function commerce_braintree_callback_hook($kind, $user, $sid) {
