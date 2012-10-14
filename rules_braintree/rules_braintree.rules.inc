@@ -14,7 +14,7 @@ function rules_braintree_rules_event_info() {
   $variables = array(
     'account' => array(
       'type' => 'user',
-      'label' => t('Custommer'),
+      'label' => t('The user of webhook callback'),
     ),
     'subscription_id' => array(
       'type' => 'text',
@@ -58,4 +58,25 @@ function rules_braintree_rules_event_info() {
   );
   
   return $events;
+}
+
+
+function rules_braintree_rules_action_info() {
+  $actions = array(
+    'rules_braintree_action_hello_user' => array(
+      'label' => t('Say hello to a selected user'),
+      'group' => t('Braintree'),
+      'parameter' => array(
+        'account' => array(
+          'type' => 'user',
+          'label' => t('User to say hello to'),
+        ),
+      ),
+    ),
+  );
+  return $actions;
+}
+
+function rules_braintree_action_hello_user($account) {
+  dsm($account);
 }

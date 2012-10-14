@@ -138,7 +138,8 @@ function commerce_braintree_subscription_cb_subscription_went_past_due($user, $s
  * Implements of hook_cb_subscription_went_active().
  */
 function commerce_braintree_subscription_cb_subscription_went_active($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  watchdog('braintree', 'sub %kind .', array('%kind' => $user->uid));
+  //commmerce_braintree_subscription_status_callback($user->uid, $sid);
 }
 
 function commerce_braintree_subscription_cron() {

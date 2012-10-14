@@ -37,8 +37,8 @@ function commerce_braintree_hooks() {
   
   $kind = $web_hook->kind;
   $sid  = $web_hook->subscription->id;
-  watchdog('braintree', 'Commerce braintree occur %kind on %sid.', array('%kind' => $kind, '%sid' => $sid));
-  $user = commerce_braintree_user_load($sid);
+  watchdog('braintree', 'Commerce braintree occur %kind .', array('%kind' => $kind));
+  $user = commerce_braintree_user_load_by_sid($sid);
   commerce_braintree_callback_hook($kind, $user, $sid);
   commerce_braintree_webhook_log($kind, $sid);
   
@@ -200,6 +200,8 @@ function commerce_braintree_subscription_overview($user) {
  * @return string
  */
 function commerce_braintree_form_customer($form, &$form_state, $user) {
+  module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
+  $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
   $customer = commerce_braintree_customer_get($user->uid);
   if (is_object($customer)) {
     $creditcard = $customer->creditCards[0];
@@ -260,20 +262,6 @@ function commerce_braintree_form_customer($form, &$form_state, $user) {
     '#title' => t('Cardholder Name'),
     '#default_value' => isset($creditcard->cardholderName) ? $creditcard->cardholderName : '',
   );
-  $form['payment_method']['ca_card_number'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Credit Card Number'),
-    //'#description' => t('Your private key'),
-    '#default_value' => isset($creditcard->maskedNumber) ? $creditcard->maskedNumber : '',
-    '#required' => TRUE,
-  );
-  $form['payment_method']['ca_exp_date'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Expiration Date'),
-    '#description' => t('Expiration Date (MM/YYYY)'),
-    '#default_value' => isset($creditcard->expirationDate) ? $creditcard->expirationDate : '',
-    '#required' => TRUE,
-  );
   $form['payment_method']['ca_token'] = array(
     '#type' => 'textfield',
     '#title' => t('Payment Method Token'),
@@ -332,11 +320,33 @@ function commerce_braintree_form_customer($form, &$form_state, $user) {
     '#title' => t('Country Name'),
     '#default_value' => isset($billing_address->countryName) ? $billing_address->countryName : '',
   );
+  
+  
+  // Prepare the fields to include on the credit card form.
+  $fields = array(
+    'code' => '',
+  );
+
+  // Add the credit card types array if necessary.
+  $card_types = array_diff(array_values($payment['settings']['card_types']), array(0));
+  if (!empty($card_types)) {
+    $fields['type'] = $card_types;
+  }
+  
+  $defaults = array(
+    'type' => $creditcard->cardType,
+    'number' => isset($creditcard->maskedNumber) ? $creditcard->maskedNumber : '', 
+    'exp_month' => $creditcard->expirationMonth, 
+    'exp_year' => $creditcard->expirationYear,
+  );
+
+  $form['payment_method'] += commerce_payment_credit_card_form($fields, $defaults);
+  
+  
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
   );
-  
   return $form;
 }
 
@@ -346,7 +356,17 @@ function commerce_braintree_form_customer($form, &$form_state, $user) {
  * @param type $form_state
  */
 function commerce_braintree_form_customer_validate($form, &$form_state) {
-  
+  // Ensure non-default values are valid numbers.
+  if (!commerce_payment_validate_credit_card_number($form_state['values']['credit_card']['number'])) {
+      form_set_error('credit_card][number', t('The credit card number you entered is invalid.'));
+  }
+
+  // Ensure the expiration date is not being updated to a past date.
+  $exp_valid = commerce_payment_validate_credit_card_exp_date($form_state['values']['credit_card']['exp_month'], $form_state['values']['credit_card']['exp_year']);
+
+  if ($exp_valid !== TRUE) {
+    form_set_error('credit_card][exp_' . $exp_valid, t('You have specified an expired credit card.'));
+  }
 }
 
 /**
@@ -376,8 +396,9 @@ function commerce_braintree_form_customer_submit($form, &$form_state) {
   
   //creditcard
   $creditcard['cardholderName'] = $form_state['values']['ca_cardholder_name'];
-  $creditcard['number']         = $form_state['values']['ca_card_number'];
-  $creditcard['expirationDate'] = $form_state['values']['ca_exp_date'];
+  $creditcard['number']         = $form_state['values']['credit_card']['number'];
+  $creditcard['expirationDate'] = $form_state['values']['credit_card']['exp_month'];
+  $creditcard['expirationDate'] .= '/' . $form_state['values']['credit_card']['exp_year'];
   $creditcard['billingAddress'] = $billing_address;
   $creditcard['options']        = array('verifyCard' => TRUE, 'updateExistingToken' => $form_state['values']['ca_token'],
                                         'updateExistingToken' => $token
