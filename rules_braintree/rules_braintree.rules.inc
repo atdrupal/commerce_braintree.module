@@ -82,7 +82,8 @@ function rules_braintree_rules_action_info() {
         
         'fields' => array(
           'type' => 'text',
-          'label' => t('Field and value. Enter one value per line, in the format field|label'),
+          'label' => t('Field and value'),
+          'help' => t('Enter one value per line, in the format field|label'),
           'restriction' => 'input',
         ),
       ),
