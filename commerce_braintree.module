@@ -889,3 +889,11 @@ function commerce_braintree_log_write($uid, $sid, $nid, $action, $message) {
   $record['message'] = $message;
   drupal_write_record ("commerce_braintree_log", $record);
 }
+
+
+function commerce_braintree_views_api() {     
+  return array(         
+    'api' => '3.0-alpha1',         
+    'path' => drupal_get_path('module','commerce_braintree'). '/views',     
+  ); 
+}
