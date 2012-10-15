@@ -10,50 +10,55 @@
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function rules_braintree_cb_subscription_canceled($user, $sid) {
-  
-  rules_invoke_event('rules_braintree_event_subscription_canceled', $user, $sid);
+  $planid = commerce_braintree_planid_get_by_sid($sid);
+  rules_invoke_event('rules_braintree_event_subscription_canceled', $user, $planid);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function rules_braintree_cb_subscription_charged_successfully($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_charged_successfully', $user, $sid);
+  $planid = commerce_braintree_planid_get_by_sid($sid);
+  rules_invoke_event('rules_braintree_event_subscription_charged_successfully', $user, $planid);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function rules_braintree_cb_subscription_charged_unsuccessfully($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_charged_unsuccessfully', $user, $sid);
+  $planid = commerce_braintree_planid_get_by_sid($sid);
+  rules_invoke_event('rules_braintree_event_subscription_charged_unsuccessfully', $user, $planid);
 }
 
 /**
  * Implements of hook_cb_subscription_expired().
  */
 function rules_braintree_cb_subscription_expired($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_expired', $user, $sid);
+  $planid = commerce_braintree_planid_get_by_sid($sid);
+  rules_invoke_event('rules_braintree_event_subscription_expired', $user, $planid);
 }
 
 /**
  * Implements of hook_cb_subscription_trial_ended().
  */
 function rules_braintree_cb_subscription_trial_ended($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_trial_ended', $user, $sid);
+  rules_invoke_event('rules_braintree_event_subscription_trial_ended', $user, $planid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_past_due().
  */
 function rules_braintree_cb_subscription_went_past_due($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_went_past_due', $user, $sid);
+  $planid = commerce_braintree_planid_get_by_sid($sid);
+  rules_invoke_event('rules_braintree_event_subscription_went_past_due', $user, $planid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_active().
  */
 function rules_braintree_cb_subscription_went_active($user, $sid) {
-  watchdog('braintree', 'dasdasdasdasdsad %kind .', array('%kind' => $user->uid));
+  $planid = commerce_braintree_planid_get_by_sid($sid);
+  rules_invoke_event('rules_braintree_event_subscription_went_active', $user, $planid);
   //print_r($user, $sid);
 }
 
@@ -67,16 +72,23 @@ function rules_braintree_menu() {
   return $items;
 }
 function rules_braintree_sub() {
+ 
+  
+  
+$instances = field_info_instances(NULL, 'profile');
+
+dsm($instances);
+dsm(array_shift($instances['profile2']));
   
 // $sub =  commerce_braintree_product_id(0);
-  $sub = commerce_order_load(22);
+//  $sub = commerce_order_load(22);
 //  $sub = commerce_braintree_subscription_get_by_id ("hh7pdb");
 //$sub = commerce_braintree_subscription_get_by_id ("kfbs8b");
 //commerce_braintree_log_write(9, 9, 9, "asdascallback", 'test');
   //print_r($sub);
-  $product = commerce_braintree_product_get_by_order($sub);
-  dpm($sub);
-  dpm($product);
+//  $product = commerce_braintree_product_get_by_order($sub);
+//  dpm($sub);
+//  dpm($product);
 //  module_load_include('inc', 'commerce_braintree', 'commerce_braintree.admin');
 //  $user, $sid = user_load(1);
 //  commerce_braintree_subscription_overview($user, $sid);

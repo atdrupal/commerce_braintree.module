@@ -6,9 +6,9 @@ function commerce_braintree_views_data() {
 
   $data['commerce_braintree_log']['table']['group']  = t('Commerce braintree log');
 
-  $data['commerce_customer_profile']['table']['base'] = array(
+  $data['commerce_braintree_log']['table']['base'] = array(
     'field' => 'id', 
-    'title' => t('Braintree log id'), 
+    'title' => t('Braintree log'), 
     'help' => t('Braintree log containing braintree payment action .'), 
   );
   

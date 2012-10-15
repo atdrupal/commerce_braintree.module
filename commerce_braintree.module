@@ -733,6 +733,11 @@ function commerce_braintree_planid_get($order) {
   return $plan_id;
 }
 
+function commerce_braintree_planid_get_by_sid($sid) {
+  $sub = commerce_braintree_subscription_get_by_id($sid);
+  return !$sub ? $sub->planId : FALSE;
+}
+
 /**
  * Get product by order
  * @param type $order
@@ -860,7 +865,7 @@ function commerce_braintree_user_load_by_sid($sid) {
 }
 
 function commerce_braintree_form_alter(&$form, &$form_state, $form_id) {
-  dsm($form);
+  //dsm($form);
 //  dsm('form state');
 //  dsm($form_state);
   //commerce_cart_product_add_by_id
