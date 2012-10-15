@@ -734,7 +734,7 @@ function commerce_braintree_planid_get($order) {
 
 function commerce_braintree_planid_get_by_sid($sid) {
   $sub = commerce_braintree_subscription_get_by_id($sid);
-  return !$sub ? $sub->planId : FALSE;
+  return $sub ? $sub->planId : FALSE;
 }
 
 /**

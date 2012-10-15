@@ -58,8 +58,9 @@ function rules_braintree_cb_subscription_went_past_due($user, $sid) {
  */
 function rules_braintree_cb_subscription_went_active($user, $sid) {
   $planid = commerce_braintree_planid_get_by_sid($sid);
+  
+  watchdog('braintree', 'plan id is %planid', array('%planid' => $planid));
   rules_invoke_event('rules_braintree_event_subscription_went_active', $user, $planid);
-  //print_r($user, $sid);
 }
 
 function rules_braintree_menu() {
@@ -73,14 +74,14 @@ function rules_braintree_menu() {
 }
 function rules_braintree_sub() {
  
-// $profile = profile2_by_uid_load(12,'studio');
-// $profile->field_events_available[LANGUAGE_NONE][0]['value'] = 30;
-// profile2_save($profile);
-// dsm($profile);
-//  
-$instances = field_info_instances('profile2', 'studio');
-
-dsm($instances);
+ $profile = profile2_by_uid_load(2,'studio');
+ //$profile->field_events_available[LANGUAGE_NONE][0]['value'] = 30;
+ profile2_save($profile);
+ dsm($profile);
+  
+//$instances = field_info_instances('profile2', 'studio');
+//
+//dsm($instances);
 //dsm(array_shift($instances['profile2']));
   
 // $sub =  commerce_braintree_product_id(0);
