@@ -106,5 +106,18 @@ function commerce_braintree_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
+  
+  // Expose the owner uid.
+  $data['commerce_braintree_log']['uid'] = array(
+    'title' => t('User log'),
+    'help' => t('Relate a profile to the user it belongs to.'),
+    'relationship' => array(
+      'handler' => 'views_handler_relationship',
+      'base' => 'users',
+      'field' => 'uid',
+      'label' => t('User log'),
+    ),
+  );
+  
   return $data;
 }
