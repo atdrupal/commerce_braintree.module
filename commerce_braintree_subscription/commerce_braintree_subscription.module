@@ -42,7 +42,7 @@ function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
 }
 function commmerce_braintree_subscription_status_get($uid, $sid) {
   $result = db_select('commerce_braintree_subscription', 'c')
-    ->fields('c','status')
+    ->fields('c',array('status'))
     ->condition('uid', $uid)
     ->condition('sid', $sid)
     ->execute()
