@@ -81,7 +81,7 @@ function commerce_braintree_webhook_log($kind, $sid) {
     $cid = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
   }
   
-  commerce_braintree_log_write($cid, $cid, $sid, 0, 'webhook callback',$kind);
+  commerce_braintree_log_write($cid, $sid, 0, 'webhook callback', $kind);
 }
 
 
