@@ -93,6 +93,7 @@ function rules_braintree_rules_action_info() {
 }
 
 function rules_braintree_action_profile_data_set($account, $planid, $fields) {
+  watchdog('braintree','rules action profile data set fire');
   $profile = profile2_by_uid_load($account->uid,$planid);
   $fields = explode("\n", str_replace("\r", '', $fields));
   $instances = field_info_instances('profile2', $planid);
