@@ -7,7 +7,7 @@
 /**
  * Implements hook_views_default_views().
  */
-function commerce_braintree_views_default_views() {
+function commerce_braintree_subscription_views_default_views() {
   $export = array();
 
   $view = new view();
@@ -219,7 +219,7 @@ function commerce_braintree_views_default_views() {
   $handler->display->display_options['tab_options']['name'] = 'management';
 
 
-  $export['commerce_braintree_log'] = $view;
+  $export['braintree_subscription'] = $view;
 
   return $export;
 }
