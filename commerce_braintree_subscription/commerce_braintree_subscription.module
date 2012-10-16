@@ -25,14 +25,14 @@ function commerce_braintree_subscription_cb_subscription_create($order_id, $sid,
 function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
   $transaction = db_transaction();
   try {
-      db_update('commerce_braintree_subscription')
-        ->fields(array(
-        'status' => $status, 
-        'last_update' => REQUEST_TIME, 
-      ))
-        ->condition('uid', $uid)
-        ->condition('sid', $sid)
-        ->execute();
+    db_update('commerce_braintree_subscription')
+      ->fields(array(
+      'status' => $status, 
+      'last_update' => REQUEST_TIME, 
+    ))
+      ->condition('uid', $uid)
+      ->condition('sid', $sid)
+      ->execute();
   }
   catch (Exception $e) {
     $transaction->rollback();
@@ -50,6 +50,28 @@ function commmerce_braintree_subscription_status_get($uid, $sid) {
   return isset($result['status']) ? $result['status'] : FALSE;
 }
 
+/**
+ * Get all subscription
+ * @return type
+ */
+function commmerce_braintree_subscription_get_all() {
+  $result = db_select('commerce_braintree_subscription', 'c')
+    ->fields('c', array('sid', 'uid', 'status'))
+    ->execute()
+    ->fetchAll();
+  return isset($result) ? $result : FALSE;
+}
+/**
+ * Delete subscription by uid and sid
+ * @param type $uid
+ * @param type $sid
+ */
+function commerce_braintree_subscription_delete($uid, $sid) {
+  db_delete('commerce_braintree_subscription')
+  ->condition('uid', $uid)
+  ->condition('sid', $sid)
+  ->execute();
+}
 
 /**
  * Update status on local by user id and subscription id
@@ -57,12 +79,13 @@ function commmerce_braintree_subscription_status_get($uid, $sid) {
  * @param type $sid
  */
 function commmerce_braintree_subscription_status_callback($uid, $sid) {
-  $sub_live = commerce_braintree_subscription_get_by_id($sid);
+  $sub = commerce_braintree_subscription_get_by_id($sid);
   $status_local = commmerce_braintree_subscription_status_get($uid, $sid);
-  if ($sub_live->status != $status_local && !$status_local) {
-    commmerce_braintree_subscription_status_update($uid, $sid, $sub_live->status);
+  if ($sub->status != $status_local && !$status_local) {
+    commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
     $user = user_load($uid);
-    commerce_braintree_subscription_status_callback_hook($sub_live->status, $user, $sid);
+    commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
+    commerce_braintree_log_write(0, 0, 0, 'callback', "updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}");
     return 1;
   }
   return 0;
@@ -138,36 +161,37 @@ function commerce_braintree_subscription_cb_subscription_went_past_due($user, $s
  * Implements of hook_cb_subscription_went_active().
  */
 function commerce_braintree_subscription_cb_subscription_went_active($user, $sid) {
-  watchdog('braintree', 'sub %kind .', array('%kind' => $user->uid));
-  //commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_callback($user->uid, $sid);
 }
 
 function commerce_braintree_subscription_cron() {
-  watchdog('braintree', 'Sync transaction from braintree server');
-  variable_set('commerce_braintree_subscription', REQUEST_TIME);
+  watchdog('braintree', 'The system being synchronize transactions from braintree server.');
+  commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "The system being synchronize transactions from braintree server.");
+  commerce_braintree_subscription_synchronization();
 }
 
-function commerce_braintree_subscription_transaction_get() {
-  $last_cron = variable_set('commerce_braintree_subscription');
-  $period = format_interval(abs(REQUEST_TIME - $last_cron));
-  $now = new Datetime();
-  $past = clone $now;
-  $past = $past->modify("-{$period}");
-  try {
-    $transactions = Braintree_Transaction::search(array(Braintree_TransactionSearch::createdAt()->between($past, $now)));
+function commerce_braintree_subscription_synchronization() {
+  $update = 0;
+  $delete = 0;
+  $rows = commmerce_braintree_subscription_get_all();
+  foreach ($rows as $row) {
+    $sub = commerce_braintree_subscription_get_by_id($row->sid);
+    if ($sub == FALSE) {
+      commerce_braintree_subscription_delete($row->uid, $row->sid);
+      ++$delete;
+      continue;
+    }
+    if (strcmp($row->status, $sub->status) !=0) {
+      commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
+      $user = user_load($row->uid);
+      commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
+      commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "updated user {$row->uid} sid {$row->sid} from {$row->status} to {$sub->status}");
+      ++$update;
+    }
   }
-  catch (Exception $e) {
-    watchdog('braintree', 'Sync transaction from braintree server error : @error', array('@error' => $e->getMessage()), WATCHDOG_ERROR);
-  }
-  $count = 0;
-  foreach ($transactions->_ids as $id) {
-    $transaction = Braintree_Transaction::find($id);
-    $sub = commerce_braintree_subscription_get_by_id($transaction->subscriptionId);
-    $customer = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
-    $updated = commmerce_braintree_subscription_status_callback($customer->id,$sub->id);
-    $count += $updated;
-  }
-  watchdog('braintree', 'Sync transaction success. Total @count updated', array('@count' => $count), WATCHDOG_ERROR);
+  
+  watchdog('braintree', 'The system synchronized transactions success. Total @update updated, Deleted @delete', array('@update' => $update, '@delete' => $delete), WATCHDOG_ERROR);
+  commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "The system synchronized transactions success. Total {$update} updated, Deleted {$delete}");
 }
 
 
