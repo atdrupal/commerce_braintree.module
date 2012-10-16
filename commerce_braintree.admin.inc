@@ -350,9 +350,7 @@ function commerce_braintree_form_customer_validate($form, &$form_state) {
  * @param type $form_state
  */
 function commerce_braintree_form_customer_submit($form, &$form_state) {
-  global $user;
-//  dsm($form_state);
-  $token  = commerce_braintree_customer_get($user->uid);
+  $token  = commerce_braintree_customer_get($GLOBALS['user']->uid);
   if (!$token) {
     return FALSE;
   }
@@ -390,7 +388,7 @@ function commerce_braintree_form_customer_submit($form, &$form_state) {
   $customer['website']    = $form_state['values']['c_website'];
   $customer['creditCard'] = $creditcard;
   
-  $result = commerce_braintree_customer_update($user->uid, $customer, $message);
+  $result = commerce_braintree_customer_update($GLOBALS['user']->uid, $customer, $message);
   $status = 'status';
   if (!$result) {
     $status = 'error';
@@ -423,9 +421,8 @@ function commerce_braintree_form_upgrade() {
  * @param array $form_state
  */
 function commerce_braintree_form_upgrade_submit($form, &$form_state) {
-  global $user;
   $pid = $form_state['values']['profile'];
-  $order = commerce_cart_order_load($user->uid);
+  $order = commerce_cart_order_load($GLOBALS['user']->uid);
   
   if (!empty($order->commerce_line_items)) {
     $line_items = array_shift($order->commerce_line_items);
@@ -443,15 +440,15 @@ function commerce_braintree_form_upgrade_submit($form, &$form_state) {
  * @return boolean
  */
 function commerce_braintree_product_list($type = 'product') {
-  $select = db_select('commerce_product', 'c')
+  $selects = db_select('commerce_product', 'c')
             ->fields('c')
             ->condition('type', $type)
             ->execute();
-  if (!$select ) {
+  if (!$selects ) {
     return FALSE;
   }
   $products = array();
-  foreach ( $select as $row ) {
+  foreach ( $selects as $row ) {
     $products[$row->product_id] = $row->title;
   }
   return $products;

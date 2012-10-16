@@ -4,9 +4,8 @@
  * Implements of hook_cb_subscription_create().
  */
 function commerce_braintree_subscription_cb_subscription_create($order_id, $sid, $status) {
-  global $user;
   $record = array();
-  $record['uid'] = $user->uid;
+  $record['uid'] = $GLOBALS['user']->uid;
   $record['sid'] = $sid;
   $record['order_id'] = $order_id;
   $record['status'] = $status;
@@ -164,12 +163,18 @@ function commerce_braintree_subscription_cb_subscription_went_active($user, $sid
   commmerce_braintree_subscription_status_callback($user->uid, $sid);
 }
 
+/**
+ * Implements of hook_cron().
+ */
 function commerce_braintree_subscription_cron() {
   watchdog('braintree', 'The system being synchronize transactions from braintree server.');
   commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "The system being synchronize transactions from braintree server.");
   commerce_braintree_subscription_synchronization();
 }
 
+/**
+ * Synchronization subscription from braintree server
+ */
 function commerce_braintree_subscription_synchronization() {
   $update = 0;
   $delete = 0;
@@ -194,7 +199,11 @@ function commerce_braintree_subscription_synchronization() {
   commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "The system synchronized transactions success. Total {$update} updated, Deleted {$delete}");
 }
 
-
+/**
+ * Get multi subscription by User ID
+ * @param type $uid
+ * @return boolean
+ */
 function commerce_braintree_subscription_load($uid) {
   $select = db_select('commerce_braintree_subscription', 'c')
     ->fields('c')

@@ -767,12 +767,10 @@ function commerce_braintree_product_get_by_order($order) {
  * @return int
  */
 function commerce_braintree_product_id($uid) {
-  global $user;
   if ($uid == 0) {
-    $uid = $user->uid;
+    $uid = $GLOBALS['user']->uid;
   }
   $order = commerce_cart_order_load($uid);
-  dsm($order);
   if (empty($order->commerce_line_items)) {
     return 0;
   }
@@ -875,9 +873,8 @@ function commerce_braintree_user_load_by_sid($sid) {
  * @param type $message
  */
 function commerce_braintree_log_write($uid, $sid, $nid, $action, $message) {
-  global $user;
   if ($uid == 0) {
-    $uid = $user->uid;
+    $uid = $GLOBALS['user']->uid;
   }
   $record = array();
   $record['uid'] = $uid;
