@@ -154,7 +154,7 @@ function commerce_braintree_subscription_overview($user) {
     }
     $status = $sub->status;
     $price = $sub->price;
-    $plan_id = (strcmp($sub->status, 'Canceled') != 0) ? $sub->planId : '';
+    //$plan_id = (strcmp($sub->status, 'Canceled') != 0) ? $sub->planId : '';
     
     $first_billing_date = $sub->firstBillingDate->format('m/d/Y');
     $next_billing_date = $sub->nextBillingDate->format('m/d/Y');
@@ -170,7 +170,7 @@ function commerce_braintree_subscription_overview($user) {
                 $next_billing_date,
                 $next_bill_amount,
                 $status, 
-                isset($plan_id) ? l(t("cancel"), "braintree/{$plan_id}/uid/{$row->uid}/cancel") : ''
+                isset($sub->id) ? l(t("cancel"), "braintree/{$sub->id}/cancel") : ''
               );
   }
     

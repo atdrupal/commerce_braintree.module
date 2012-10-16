@@ -46,9 +46,9 @@ function commerce_braintree_menu() {
     'file' => 'commerce_braintree.admin.inc',
   );
   
-  $items['braintree/%commerce_braintree_plan/uid/%/cancel'] = array(
+  $items['braintree/%/cancel'] = array(
     'title' => 'Cancel braintree recurring billing',
-    'load arguments' => array(3),
+    //'load arguments' => array(3),
     'page callback' => 'commerce_braintree_page_cancel',
     'page arguments' => array(1),
     'access callback' => 'commerce_braintree_page_cancel_access',
@@ -99,13 +99,16 @@ function commerce_braintree_permission() {
  * @param type $sub
  * @return boolean
  */
-function commerce_braintree_page_cancel_access($sub) {
-  $uid = $sub['uid'];
+function commerce_braintree_page_cancel_access($sid) {
+  $sub = commerce_braintree_subscription_get_by_id($sid);
+  if (!$sub) {
+    return FALSE;
+  }
   global $user;
   if (user_access('cancel any user')) {
     return TRUE;
   }
-  if ($user->uid == $uid) {
+  if ($user->uid == $sub->id) {
     return TRUE;
   }
   return FALSE;
