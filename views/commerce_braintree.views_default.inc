@@ -178,11 +178,11 @@ function commerce_braintree_views_default_views() {
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
   $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
-  $handler->display->display_options['path'] = 'admin/commerce/braintree-log/list';
-  $handler->display->display_options['menu']['type'] = 'default tab';
-  $handler->display->display_options['menu']['title'] = 'List';
-  $handler->display->display_options['menu']['weight'] = '-10';
-  $handler->display->display_options['menu']['name'] = 'main-menu';
+  $handler->display->display_options['path'] = 'admin/commerce/braintree/log';
+  $handler->display->display_options['menu']['type'] = 'tab';
+  $handler->display->display_options['menu']['title'] = 'Log';
+  $handler->display->display_options['menu']['weight'] = '10';
+  $handler->display->display_options['menu']['name'] = 'management';
   $handler->display->display_options['menu']['context'] = 0;
   $handler->display->display_options['tab_options']['type'] = 'normal';
   $handler->display->display_options['tab_options']['title'] = 'Braintree log';
