@@ -149,7 +149,7 @@ function commerce_braintree_subscription_overview($user) {
                 $next_billing_date,
                 $next_bill_amount,
                 $status, 
-                isset($sub->id) ? l(t("cancel"), "braintree/{$sub->id}/cancel") : ''
+                (strcmp($sub->status, 'Canceled') != 0) ? l(t("cancel"), "braintree/{$sub->id}/cancel") : ''
               );
   }
     
