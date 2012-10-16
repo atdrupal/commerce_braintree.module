@@ -46,7 +46,7 @@ function commerce_braintree_menu() {
   
   $items['braintree/%/cancel'] = array(
     'title' => 'Cancel braintree recurring billing',
-    'page callback' => 'commerce_braintree_subscription_cancel',
+    'page callback' => 'commerce_braintree_subscription_cancel_link',
     'page arguments' => array(1),
     'access callback' => 'commerce_braintree_subscription_cancel_access',
     'access arguments' => array(1), 
@@ -95,7 +95,7 @@ function commerce_braintree_permission() {
  * @param type $sub
  * @return boolean
  */
-function commerce_braintree_subscription_cancel_access($sid) {
+function commerce_braintree_subscription_cancel_link_access($sid) {
   $sub = commerce_braintree_subscription_get_by_id($sid);
   if ($sub == FALSE) {
     return FALSE;

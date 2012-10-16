@@ -87,7 +87,7 @@ function commerce_braintree_webhook_log($kind, $sid) {
  * @param type $sub
  * @return type
  */
-function commerce_braintree_subscription_cancel($sid) {
+function commerce_braintree_subscription_cancel_link($sid) {
   $result = commerce_braintree_subscription_cancel($sid, $message);
   drupal_set_message(check_plain($message), $result ? "status" : "error");
   return '<div>' . $message . '</div>';
