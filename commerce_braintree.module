@@ -896,6 +896,9 @@ function commerce_braintree_log_write($uid, $sid, $nid, $action, $message) {
   drupal_write_record ("commerce_braintree_log", $record);
 }
 
+/**
+ * Implementation of hook_views_api().
+ */
 
 function commerce_braintree_views_api() {     
   return array(         
