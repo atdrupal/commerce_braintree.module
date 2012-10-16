@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * @file
+ * Implementation hook_views_data to intergrate views with table commerce_braintree_subscription
+ */
 
 function commerce_braintree_subscription_views_data() {
   $data = array();

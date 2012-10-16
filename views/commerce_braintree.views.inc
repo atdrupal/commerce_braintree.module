@@ -1,6 +1,13 @@
 <?php
+/**
+ * @file
+ * Implementation hook_views_data to intergrate views with tables commerce_braintree_log
+ */
 
-
+/**
+ * Implementation of hook_views_data().
+ * @return type
+ */
 function commerce_braintree_views_data() {
   $data = array();
 

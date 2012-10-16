@@ -12,7 +12,7 @@ function commerce_braintree_subscription_cb_subscription_create($order_id, $sid,
   $record['status'] = $status;
   $record['created'] = REQUEST_TIME;
   $record['last_update'] = REQUEST_TIME;
-  drupal_write_record ("commerce_braintree_subscription", $record);
+  drupal_write_record("commerce_braintree_subscription", $record);
 }
 
 /**
@@ -42,7 +42,7 @@ function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
 }
 function commmerce_braintree_subscription_status_get($uid, $sid) {
   $result = db_select('commerce_braintree_subscription', 'c')
-    ->fields('c',array('status'))
+    ->fields('c', array('status'))
     ->condition('uid', $uid)
     ->condition('sid', $sid)
     ->execute()
@@ -85,7 +85,7 @@ function commmerce_braintree_subscription_status_callback($uid, $sid) {
     commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
     $user = user_load($uid);
     commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
-    commerce_braintree_log_write(0, 0, 0, 'callback', "updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}");
+    commerce_braintree_log_write(0, 0, 0, 'callback', "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}");
     return 1;
   }
   return 0;
@@ -185,7 +185,7 @@ function commerce_braintree_subscription_synchronization() {
       commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
       $user = user_load($row->uid);
       commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
-      commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "updated user {$row->uid} sid {$row->sid} from {$row->status} to {$sub->status}");
+      commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "Updated user {$row->uid} sid {$row->sid} from {$row->status} to {$sub->status}");
       ++$update;
     }
   }
@@ -218,6 +218,6 @@ function commerce_braintree_subscription_load($uid) {
 function commerce_braintree_subscription_views_api() {     
   return array(         
     'api' => '3.0-alpha1',         
-    'path' => drupal_get_path('module','commerce_braintree_subscription'). '/views',     
+    'path' => drupal_get_path('module', 'commerce_braintree_subscription') . '/views',     
   ); 
 }

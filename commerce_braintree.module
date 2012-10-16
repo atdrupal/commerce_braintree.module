@@ -12,7 +12,6 @@ function commerce_braintree_menu() {
   $items = array();
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
   
-  
   $items['user/%user/orders/%commerce_order/view'] = array(
     'title' => 'View',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -35,11 +34,10 @@ function commerce_braintree_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   
-  
   $items['user/%user/subscription/customer'] = array(
     'title' => 'Customer recurring billing',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_form_customer',1),
+    'page arguments' => array('commerce_braintree_form_customer', 1),
     'access callback' => 'commerce_braintree_customer_acess',
     'access arguments' => array(1),
     'type' => MENU_LOCAL_TASK,
@@ -48,9 +46,9 @@ function commerce_braintree_menu() {
   
   $items['braintree/%/cancel'] = array(
     'title' => 'Cancel braintree recurring billing',
-    'page callback' => 'commerce_braintree_page_cancel',
+    'page callback' => 'commerce_braintree_subscription_cancel',
     'page arguments' => array(1),
-    'access callback' => 'commerce_braintree_page_cancel_access',
+    'access callback' => 'commerce_braintree_subscription_cancel_access',
     'access arguments' => array(1), 
     'type' => MENU_CALLBACK,
     'file' => 'commerce_braintree.admin.inc',
@@ -65,7 +63,6 @@ function commerce_braintree_menu() {
   );
   
   if (!isset($payment['settings']['webhook_link']))  return $items;
-  // Define an path that trigger from braintree Webhooks
   $items[$payment['settings']['webhook_link']] = array(
     'title' => 'Trigger occurs form braintree',
     'page callback' => 'commerce_braintree_hooks',
@@ -98,7 +95,7 @@ function commerce_braintree_permission() {
  * @param type $sub
  * @return boolean
  */
-function commerce_braintree_page_cancel_access($sid) {
+function commerce_braintree_subscription_cancel_access($sid) {
   $sub = commerce_braintree_subscription_get_by_id($sid);
   if ($sub == FALSE) {
     return FALSE;
@@ -279,7 +276,6 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   //If not found. Create new
   if ($subs == FALSE) {
     $sub = commerce_braintree_subscription_create($order->order_id, $token, $plan_id, $message);
-//    dsm($sub . "dasdasdasdas");return FALSE;
     if ($sub !== FALSE) {
       $status = COMMERCE_PAYMENT_STATUS_SUCCESS;
     }
@@ -316,11 +312,13 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
 
 /**
  * 
+ * Get customer information
+ * @param type $pane_values
  * @param type $order
+ * @return type
  */
 function commerce_braintree_customer_info($pane_values, $order) {
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  
   $billing_address = array();
   if ($order_wrapper->commerce_customer_billing->value()) {
     $billing_address_get = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
@@ -405,9 +403,10 @@ function commerce_braintree_initialize_library() {
 }
 
 /**
- * create new customer
- * @param stdClass $customer
- * @return type 
+ * Create new customer
+ * @param type $customer
+ * @param type $message
+ * @return boolean
  */
 function commerce_braintree_customer_create($customer, &$message = "") {
   //Initializes the Braintree Library
@@ -433,10 +432,11 @@ function commerce_braintree_customer_create($customer, &$message = "") {
 }
 
 /**
- * update customer info-
+ * Update customer information
  * @param type $cid
  * @param array $info
- * @return type 
+ * @param type $message
+ * @return boolean
  */
 function commerce_braintree_customer_update($cid, array $info, &$message) {
   //Initializes the Braintree Library
@@ -450,19 +450,19 @@ function commerce_braintree_customer_update($cid, array $info, &$message) {
   $customer = Braintree_Customer::update($cid, $info);
   if ($customer->success) {
     $message = 'update successfull';
-    commerce_braintree_log_write(0, 0, $nid, $action,$message);
+    commerce_braintree_log_write(0, 0, $nid, $action, $message);
     return $customer;
   } 
   
   foreach ($customer->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
-  commerce_braintree_log_write(0, 0, $nid, $action,$message);
+  commerce_braintree_log_write(0, 0, $nid, $action, $message);
   return FALSE;
 }
 
 /**
- * get customer by id
+ * Get customer by id
  * @param type $cid
  * @return type 
  */
@@ -482,7 +482,7 @@ function commerce_braintree_customer_get($cid) {
 }
 
 /**
- * get customer by token
+ * Get customer by token
  * @param type $token
  * @return boolean
  */
@@ -504,7 +504,7 @@ function commerce_braintree_customer_get_by_token($token) {
 }
 
 /**
- * get all customer save in Vault
+ * Get all customer save in Vault
  * @return type 
  */
 function commerce_braintree_customer_get_all() {
@@ -519,7 +519,7 @@ function commerce_braintree_customer_get_all() {
 }
 
 /**
- * delete customer by id
+ * Delete customer by id
  * @param type $cid
  * @return type 
  */
@@ -550,10 +550,12 @@ function commerce_braintree_customer_delete_all() {
 }
 
 /**
- * apply customer to plan by token and plan ID
+ * Apply customer to plan by token and plan ID
+ * @param type $order_id
  * @param type $token
  * @param type $plan_id
- * @return type 
+ * @param type $message
+ * @return boolean
  */
 function commerce_braintree_subscription_create($order_id, $token, $plan_id, &$message = "") {
   //Initializes the Braintree Library
@@ -584,9 +586,10 @@ function commerce_braintree_subscription_create($order_id, $token, $plan_id, &$m
 }
 
 /**
- * cancel customer out plan
+ * Cancel customer out plan
  * @param type $subscription_id
- * @return type 
+ * @param type $message
+ * @return boolean
  */
 function commerce_braintree_subscription_cancel($subscription_id, &$message = "") {
   //Initializes the Braintree Library
@@ -615,7 +618,7 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
 }
 
 /**
- * 
+ * Get subscription by customer ID
  * @param type $cid
  */
 function commerce_braintree_subscription_get_by_cid($cid) {
@@ -663,7 +666,7 @@ function commerce_braintree_subscription_get_by_cid_planid($cid, $planid) {
 }
 
 /**
- * 
+ * Get subscription by ID
  * @param type $sid
  * @return type
  */
@@ -705,6 +708,11 @@ function commerce_braintree_plan_check($plan_id) {
   return FALSE;
 }
 
+/**
+ * Get creditcard by customer token
+ * @param type $token
+ * @return boolean
+ */
 function commerce_braintree_creditcard_get_by_token($token) {
   //Initializes the Braintree Library
   $load = commerce_braintree_initialize_library();
@@ -752,6 +760,12 @@ function commerce_braintree_product_get_by_order($order) {
   return $op;
 }
 
+/**
+ * Get product ID in Order by User id 
+ * @global type $user
+ * @param type $uid
+ * @return int
+ */
 function commerce_braintree_product_id($uid) {
   global $user;
   if ($uid == 0) {
@@ -808,21 +822,7 @@ function commerce_braintree_transaction_status($sub_status) {
 }
 
 /**
- * Load arguments menu willcard %commerce_braintree_plan
- * @param type $plan_id
- * @param type $uid
- * @return boolean
- */
-function commerce_braintree_plan_load($plan_id, $uid) {
-  if (!$plan_id || !$uid) {
-    return FALSE;
-  }
-  $sub = array("planid" => $plan_id, "uid" => $uid);
-  return $sub;
-}
-
-/**
- * get orders by uid
+ * Get orders by uid
  * @param type $uid
  * @return boolean
  */
@@ -865,21 +865,14 @@ function commerce_braintree_user_load_by_sid($sid) {
   return $user;
 }
 
-function commerce_braintree_form_alter(&$form, &$form_state, $form_id) {
-  //dsm($form);
-//  dsm('form state');
-//  dsm($form_state);
-  //commerce_cart_product_add_by_id
-}
-
 /**
- * Record columns
- * uid
- * cid
- * nid
- * timestamp
- * action
- * @param array $record
+ * Write log
+ * @global type $user
+ * @param type $uid
+ * @param type $sid
+ * @param type $nid
+ * @param type $action
+ * @param type $message
  */
 function commerce_braintree_log_write($uid, $sid, $nid, $action, $message) {
   global $user;
@@ -893,7 +886,7 @@ function commerce_braintree_log_write($uid, $sid, $nid, $action, $message) {
   $record['action'] = $action;
   $record['timestamp'] = REQUEST_TIME;
   $record['message'] = $message;
-  drupal_write_record ("commerce_braintree_log", $record);
+  drupal_write_record("commerce_braintree_log", $record);
 }
 
 /**
@@ -903,6 +896,6 @@ function commerce_braintree_log_write($uid, $sid, $nid, $action, $message) {
 function commerce_braintree_views_api() {     
   return array(         
     'api' => '3.0-alpha1',         
-    'path' => drupal_get_path('module','commerce_braintree'). '/views',     
+    'path' => drupal_get_path('module', 'commerce_braintree') . '/views',     
   ); 
 }

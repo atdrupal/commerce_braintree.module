@@ -1,0 +1,4 @@
+1. Download libraries https://github.com/braintree/braintree_php and put /sites/all/libraries/briantree
+2. Enable commerce_braintree
+3. Enable commere_braintree_subscription
+4. Enable rules_commerce

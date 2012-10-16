@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Create link handle cancel subscription
+ */
 
 /**
  * Field handler to present a link to cancel subscription.
