@@ -233,6 +233,7 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
+  dsm($pane_values);return FALSE;
   if (empty($payment_method['settings'])) {
     drupal_set_message(t('This payment method must be configured by an administrator before it can be used.'), 'error');
     return FALSE;
@@ -308,6 +309,40 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   }
   commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
   return;
+}
+
+
+function commerce_braintree_creditcard_info($pane_values, $order) {
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+  $billing_address = array();
+  if ($order_wrapper->commerce_customer_billing->value()) {
+    $billing_address_get = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
+    if (empty($billing_address_get['first_name'])) {
+      $name_parts = explode(' ', $billing_address_get['name_line']);
+      $billing_address_get['first_name'] = array_shift($name_parts);
+      $billing_address_get['last_name'] = implode(' ', $name_parts);
+    }
+    $billing_address = array(
+      'firstName' => isset($billing_address_get['first_name']) ?substr($billing_address_get['first_name'], 0, 50) : "",
+      'lastName' => isset($billing_address_get['last_name']) ?substr($billing_address_get['last_name'], 0, 50) : "",
+      'company' => isset($billing_address_get['organisation_name']) ? substr($billing_address_get['organisation_name'], 0, 50) : "",
+      'streetAddress' => isset($billing_address_get['thoroughfare']) ? substr($billing_address_get['thoroughfare'], 0, 60) : "",
+      'extendedAddress' => isset($billing_address_get['premise']) ? substr($billing_address_get['premise'], 0, 60) : "",
+      'postalCode' => isset($billing_address_get['postal_code']) ? substr($billing_address_get['postal_code'], 0, 20) : "",
+      'countryCodeAlpha2' => isset($billing_address_get['country']) ? $billing_address_get['country'] : "",
+      'locality' => isset($billing_address_get['locality']) ? $billing_address_get['locality'] : "",
+    );
+  }
+  
+  $credit_card = array(
+    'number' => $pane_values['credit_card']['number'],
+    'expirationDate' => $pane_values['credit_card']['exp_month'] . '/' . $pane_values['credit_card']['exp_year'],
+    'billingAddress' => $billing_address,
+    'cvv' => $pane_values['credit_card']['code'],
+    'options' => array(
+            'verifyCard' => TRUE
+     )
+  );
 }
 
 /**
