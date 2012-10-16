@@ -108,7 +108,7 @@ function commerce_braintree_page_cancel_access($sid) {
   if (user_access('cancel any user')) {
     return TRUE;
   }
-  if ($user->uid == $sub->id) {
+  if ($user->uid == $sub->id && user_access('cancel own user')) {
     return TRUE;
   }
   return FALSE;
