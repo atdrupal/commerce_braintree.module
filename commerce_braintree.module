@@ -233,7 +233,7 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  dsm($pane_values);return FALSE;
+  //dsm($pane_values);return FALSE;
   if (empty($payment_method['settings'])) {
     drupal_set_message(t('This payment method must be configured by an administrator before it can be used.'), 'error');
     return FALSE;
@@ -255,9 +255,11 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
       drupal_set_message(t('We encountered an error processing your transaction. Please contact us to resolve the issue.'), 'error');
       return FALSE;
   }
-  $customer_new = commerce_braintree_customer_info($pane_values, $order);
+  
+  //create customer
   $customer = commerce_braintree_customer_get($order->uid);
   if (!$customer) {
+    $customer_new = commerce_braintree_customer_info($order);
     $customer = commerce_braintree_customer_create($customer_new, $message);
     if (!$customer) {
       $status   = COMMERCE_PAYMENT_STATUS_FAILURE;
@@ -265,12 +267,24 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
       commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
       return FALSE;
     }
-    
-    $token = $customer->customer->creditCards[0]->token;
+    //$token = $customer->customer->creditCards[0]->token;
   }
   else {
-    $token = $customer->creditCards[0]->token;
+    
+    //$token = $customer->creditCards[0]->token;
   }
+  //create creditcard
+  
+
+  $token = commerce_braintree_token_get_by_creditcard($pane_values['credit_card']['number'], $order->uid);
+  if ($token == FALSE) {
+    $credit_card = commerce_braintree_creditcard_info($pane_values, $order);
+    $credit_card = commerce_braintree_credit_card_create($credit_card);
+    $token = $credit_card->creditCard->token;
+  }
+  //$token = $credit_card->token;
+  //dsm($credit_card);return FALSE;
+  dsm($token); return FALSE;
 
   //Get all subsription user in order
   $subs = commerce_braintree_subscription_get_by_cid($order->uid);
@@ -311,7 +325,12 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
   return;
 }
 
-
+/**
+ * Get creditcard in form shipping checkout
+ * @param type $pane_values
+ * @param type $order
+ * @return type 
+ */
 function commerce_braintree_creditcard_info($pane_values, $order) {
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
   $billing_address = array();
@@ -335,14 +354,22 @@ function commerce_braintree_creditcard_info($pane_values, $order) {
   }
   
   $credit_card = array(
+    'customerId' => $order->uid,
     'number' => $pane_values['credit_card']['number'],
     'expirationDate' => $pane_values['credit_card']['exp_month'] . '/' . $pane_values['credit_card']['exp_year'],
     'billingAddress' => $billing_address,
     'cvv' => $pane_values['credit_card']['code'],
     'options' => array(
-            'verifyCard' => TRUE
+            'verifyCard' => TRUE,
      )
   );
+  return $credit_card;
+}
+
+function commerce_braintree_creditcard_check_exist($customer, $card_number){
+  foreach ($customer->creditCards as $credit_card) {
+    
+  }
 }
 
 /**
@@ -352,9 +379,8 @@ function commerce_braintree_creditcard_info($pane_values, $order) {
  * @param type $order
  * @return type
  */
-function commerce_braintree_customer_info($pane_values, $order) {
+function commerce_braintree_customer_info($order) {
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  $billing_address = array();
   if ($order_wrapper->commerce_customer_billing->value()) {
     $billing_address_get = $order_wrapper->commerce_customer_billing->commerce_customer_address->value();
     if (empty($billing_address_get['first_name'])) {
@@ -362,36 +388,13 @@ function commerce_braintree_customer_info($pane_values, $order) {
       $billing_address_get['first_name'] = array_shift($name_parts);
       $billing_address_get['last_name'] = implode(' ', $name_parts);
     }
-    $billing_address = array(
-      'firstName' => isset($billing_address_get['first_name']) ?substr($billing_address_get['first_name'], 0, 50) : "",
-      'lastName' => isset($billing_address_get['last_name']) ?substr($billing_address_get['last_name'], 0, 50) : "",
-      'company' => isset($billing_address_get['organisation_name']) ? substr($billing_address_get['organisation_name'], 0, 50) : "",
-      'streetAddress' => isset($billing_address_get['thoroughfare']) ? substr($billing_address_get['thoroughfare'], 0, 60) : "",
-      'extendedAddress' => isset($billing_address_get['premise']) ? substr($billing_address_get['premise'], 0, 60) : "",
-      'postalCode' => isset($billing_address_get['postal_code']) ? substr($billing_address_get['postal_code'], 0, 20) : "",
-      'countryCodeAlpha2' => isset($billing_address_get['country']) ? $billing_address_get['country'] : "",
-      'locality' => isset($billing_address_get['locality']) ? $billing_address_get['locality'] : "",
-    );
   }
-  
-  $credit_card = array(
-    'number' => $pane_values['credit_card']['number'],
-    'expirationDate' => $pane_values['credit_card']['exp_month'] . '/' . $pane_values['credit_card']['exp_year'],
-    'billingAddress' => $billing_address,
-    'options' => array(
-            'verifyCard' => TRUE
-     )
-  );
-  $custom_field = array(
-        'profile_nid' => '',
-        'user_nid' => $order->uid,
-  );
+ 
   $customer_new = array(
-    'firstName' => isset($billing_address['firstName']) ? $billing_address['firstName'] : "",
-    'lastName' => isset($billing_address['firstName']) ? $billing_address['lastName'] : "",
-    'email' => isset($billing_address['firstName']) ? substr($order->mail, 0, 255) : "",
+    'firstName' => isset($billing_address_get['first_name']) ? $billing_address_get['first_name'] : "",
+    'lastName' => isset($billing_address_get['last_name']) ? $billing_address_get['last_name'] : "",
+    'email' => substr($order->mail, 0, 255),
     'id' => $order->uid,
-    'creditCard' => $credit_card,
   );
   return $customer_new;
 }
@@ -435,6 +438,15 @@ function commerce_braintree_initialize_library() {
     return FALSE;
   }
   return TRUE;
+}
+
+
+function commerce_braintree_credit_card_create($credit_card) {
+  $result = Braintree_CreditCard::create($credit_card);
+  if ($result->success) {
+    return $result;
+  }
+  return FALSE;
 }
 
 /**
@@ -515,6 +527,40 @@ function commerce_braintree_customer_get($cid) {
   }
   return $customer;
 }
+
+function commerce_braintree_token_get_by_creditcard($card_number, $cid) {
+  //Initializes the Braintree Library
+  $load = commerce_braintree_initialize_library();
+  if ($load == FALSE) {    
+    return FALSE;  
+  }
+  $bin = substr($card_number, 0, 6);
+  $last4 = substr($card_number, strlen($card_number)-4, strlen($card_number)-1);
+  try {
+    $collection1 = Braintree_Customer::search(array(
+      Braintree_CustomerSearch::creditCardNumber()->startsWith($bin)
+    ));
+    $collection2 = Braintree_Customer::search(array(
+      Braintree_CustomerSearch::creditCardNumber()->endsWith($last4)
+    ));
+    $customers = array_intersect($collection1->_ids, $collection2->_ids);
+    if (!in_array($cid, $customers)) {
+      return FALSE;
+    }
+    $customer = commerce_braintree_customer_get($cid);
+    foreach ($customer->creditCards as $credit_cards) {
+      if ($credit_cards->bin == $bin && $credit_cards->last4 == $last4) {
+        return $credit_cards->token;
+      }
+    }
+  } catch (Exception $e) {
+    //we have a not found exception!
+    $customers = FALSE;
+  }
+  return FALSE;
+}
+
+
 
 /**
  * Get customer by token
