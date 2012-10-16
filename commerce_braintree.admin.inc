@@ -87,29 +87,8 @@ function commerce_braintree_webhook_log($kind, $sid) {
  * @param type $sub
  * @return type
  */
-function commerce_braintree_page_cancel($sub) {
-  $uid  = $sub['uid'];
-  $plan = $sub['planid'];
-  $user = user_load($uid);
-  $er   = FALSE;
-  if (!$user) {
-    drupal_set_message(check_plain("User {$uid} doesnt exist"), 'error'); 
-    $er = TRUE;
-  }
-  if (!commerce_braintree_plan_check($plan)) {
-    drupal_set_message(check_plain("Plan {$plan} doesnt exist"), 'error'); 
-    $er = TRUE;
-  }
-  if ($er) {
-    return '<div></div>';
-  }
-  $sub  = commerce_braintree_subscription_get_by_cid_planid($uid, $plan);
-  if (!$sub) {
-    $message = check_plain("Not found subscription with plan id is {$plan} and user id is {$uid}");
-    drupal_set_message($message, "error");
-    return '<div>Faile</div>';
-  }
-  $result = commerce_braintree_subscription_cancel($sub->id, $message);
+function commerce_braintree_page_cancel($sid) {
+  $result = commerce_braintree_subscription_cancel($sid, $message);
   drupal_set_message($message, $result ? "status" : "error");
   return '<div>' . $message . '</div>';
 }
