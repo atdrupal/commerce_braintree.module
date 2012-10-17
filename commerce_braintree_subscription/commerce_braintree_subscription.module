@@ -79,7 +79,7 @@ function commerce_braintree_subscription_cron() {
 function commerce_braintree_subscription_cb_subscription_created($subscription, $order_id) {
   $sub = new stdClass();
   $sub->uid = $GLOBALS['user']->uid;
-  $sub->sid = $subscription->sid;
+  $sub->sid = $subscription->id;
   $sub->order_id = $order_id;
   $sub->status = $subscription->status;
   $sub->token = $subscription->paymentMethodToken;
