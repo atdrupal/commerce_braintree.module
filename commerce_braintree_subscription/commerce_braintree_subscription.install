@@ -27,6 +27,20 @@ function commerce_braintree_subscription_schema() {
         //'not null' => TRUE, 
         'default' => 0,
       ), 
+      'pid' => array(
+        'description' => 'Pofiles id', 
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        //'not null' => TRUE, 
+        'default' => 0,
+      ), 
+      'token' => array(
+        'description' => 'Credit card token.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        //'not null' => TRUE, 
+        'default' => 0,
+      ), 
       'status' => array(
         'description' => 'Subscription id on braintree.', 
         'type' => 'varchar', 

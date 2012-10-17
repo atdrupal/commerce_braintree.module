@@ -119,7 +119,7 @@ function commerce_braintree_subscription_view($order) {
  * @return type
  */
 function commerce_braintree_subscription_overview($user) {
-  $resluts = commerce_braintree_subscription_load($user->uid);
+  $resluts = commerce_braintree_subscription_load_by_user($user->uid);
   if ($resluts == FALSE) {
     return "<h4>Don't data<h4>";
   }

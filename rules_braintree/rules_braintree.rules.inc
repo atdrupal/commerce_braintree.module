@@ -75,9 +75,9 @@ function rules_braintree_rules_action_info() {
           'type' => 'user',
           'label' => t('The user of webhook callback'),
         ),
-        'planid' => array(
+        'sid' => array(
           'type' => 'text',
-          'label' => t('Braintree plan id'),
+          'label' => t('Braintree subscription id'),
         ),
         
         'fields' => array(
@@ -95,13 +95,13 @@ function rules_braintree_rules_action_info() {
 /**
  * Save profile
  * @param type $account
- * @param type $planid
+ * @param type $sid
  * @param type $fields
  */
-function rules_braintree_action_profile_data_set($account, $planid, $fields) {
-  $profile = profile2_by_uid_load($account->uid, $planid);
+function rules_braintree_action_profile_data_set($account, $sid, $fields) {
+  $profile = profile2_by_uid_load($account->uid, $sid);
   $fields = explode("\n", str_replace("\r", '', $fields));
-  $instances = field_info_instances('profile2', $planid);
+  $instances = field_info_instances('profile2', $sid);
   foreach ($fields as $field) {
     $field = explode('|', $field);
     foreach ($instances as $key => $insf) {

@@ -1,0 +1,58 @@
+<?php
+
+
+function commerce_braintree_log_schema() {
+  $schema['commerce_braintree_log'] = array(
+    'description' => 'The base table transaction logs data sent and received from BrainTree.', 
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier for a log.', 
+        'type' => 'serial', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE,
+      ), 
+      'uid' => array(
+        'description' => 'User id.', 
+        'type' => 'int', 
+        'unsigned' => TRUE, 
+        'not null' => TRUE, 
+        'default' => 0,
+      ), 
+      'action' => array(
+        'description' => 'The action occurred.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        //'not null' => TRUE, 
+        'default' => '',
+      ),
+      'message' => array(
+        'description' => 'The message description something.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        //'not null' => TRUE, 
+        'default' => '',
+      ),
+      'data' => array(
+        'description' => 'The data sent and receive braintree.',
+        'type' => 'blob',
+        //'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'timestamp' => array(
+        'description' => 'The Unix timestamp at which the read occurred.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+
+    ), 
+    'foreign keys' => array(
+      'uid' => array(
+        'table' => 'users', 
+        'columns' => array('uid' => 'uid'),
+      ),
+    ), 
+    'primary key' => array('id'),
+  );
+  return $schema;
+}

@@ -1,0 +1,41 @@
+<?php
+
+
+
+/**
+ * Implementation of hook_cb_send_data_braintree().
+ */
+function commerce_braintree_log_cb_send_data_braintree($data, $action, $message) {
+  $log = new stdClass();
+  $log->data = $data;
+  $log->action = $action;
+  $log->message = $message;
+  commerce_braintree_log_save($log);
+}
+
+
+/**
+ * Implementation of hook_cb_receive_data_braintree().
+ */
+function commerce_braintree_log_cb_receive_data_braintree($data, $action, $message) {
+  $log = new stdClass();
+  $log->data = $data;
+  $log->action = $action;
+  $log->message = $message;
+  commerce_braintree_log_save($log);
+}
+
+
+/**
+ * 
+ * @param stdClass $log
+ */
+function commerce_braintree_log_save(stdClass $log) {
+  $record = array();
+  $record['uid'] = isset($log->uid) ? $log->uid : $GLOBALS['user']->uid;
+  $record['action'] = isset($log->action) ? $log->action : 'default';
+  $record['message'] = isset($log->message) ? $log->message : '';
+  $record['data'] = isset($log->data) ? serialize($log->data) : '';
+  $record['timestamp'] = REQUEST_TIME;
+  drupal_write_record("commerce_braintree_log", $record);
+}

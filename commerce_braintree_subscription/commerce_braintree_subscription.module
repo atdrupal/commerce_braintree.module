@@ -1,118 +1,16 @@
 <?php
 
+define('COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC','synchronization transactions');
 /**
- * Implements of hook_cb_subscription_create().
+ * Implementation of hook_views_api().
  */
-function commerce_braintree_subscription_cb_subscription_create($order_id, $sid, $status) {
-  $record = array();
-  $record['uid'] = $GLOBALS['user']->uid;
-  $record['sid'] = $sid;
-  $record['order_id'] = $order_id;
-  $record['status'] = $status;
-  $record['created'] = REQUEST_TIME;
-  $record['last_update'] = REQUEST_TIME;
-  drupal_write_record("commerce_braintree_subscription", $record);
-}
 
-/**
- * Update status of subscription to database
- * @param type $uid
- * @param type $sid
- * @param type $status
- * @throws Exception
- */
-function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
-  $transaction = db_transaction();
-  try {
-    db_update('commerce_braintree_subscription')
-      ->fields(array(
-      'status' => $status, 
-      'last_update' => REQUEST_TIME, 
-    ))
-      ->condition('uid', $uid)
-      ->condition('sid', $sid)
-      ->execute();
-  }
-  catch (Exception $e) {
-    $transaction->rollback();
-    watchdog_exception('commerce_braintree_subscription', $e);
-    throw $e;
-  }
+function commerce_braintree_subscription_views_api() {     
+  return array(         
+    'api' => '3.0-alpha1',         
+    'path' => drupal_get_path('module', 'commerce_braintree_subscription') . '/views',     
+  ); 
 }
-function commmerce_braintree_subscription_status_get($uid, $sid) {
-  $result = db_select('commerce_braintree_subscription', 'c')
-    ->fields('c', array('status'))
-    ->condition('uid', $uid)
-    ->condition('sid', $sid)
-    ->execute()
-    ->fetchAssoc();
-  return isset($result['status']) ? $result['status'] : FALSE;
-}
-
-/**
- * Get all subscription
- * @return type
- */
-function commmerce_braintree_subscription_get_all() {
-  $result = db_select('commerce_braintree_subscription', 'c')
-    ->fields('c', array('sid', 'uid', 'status'))
-    ->execute()
-    ->fetchAll();
-  return isset($result) ? $result : FALSE;
-}
-/**
- * Delete subscription by uid and sid
- * @param type $uid
- * @param type $sid
- */
-function commerce_braintree_subscription_delete($uid, $sid) {
-  db_delete('commerce_braintree_subscription')
-  ->condition('uid', $uid)
-  ->condition('sid', $sid)
-  ->execute();
-}
-
-/**
- * Update status on local by user id and subscription id
- * @param type $uid
- * @param type $sid
- */
-function commmerce_braintree_subscription_status_callback($uid, $sid) {
-  $sub = commerce_braintree_subscription_get_by_id($sid);
-  $status_local = commmerce_braintree_subscription_status_get($uid, $sid);
-  if ($sub->status != $status_local && !$status_local) {
-    commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
-    $user = user_load($uid);
-    commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
-    commerce_braintree_log_write(0, 0, 0, 'callback', "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}");
-    return 1;
-  }
-  return 0;
-}
-/**
- * When updated subscription, callback hook base subscription status to update our users
- * @param type $kind
- * @param type $user
- * @param type $sid
- */
-function commerce_braintree_subscription_status_callback_hook($kind, $user, $sid) {
-  switch ($kind) {
-    case Braintree_Subscription::CANCELED:
-      module_invoke_all('cb_subscription_canceled', $user, $sid);
-      break;
-    case Braintree_Subscription::EXPIRED:
-      module_invoke_all('cb_subscription_expired', $user, $sid);
-      break;
-    case Braintree_Subscription::ACTIVE:
-      module_invoke_all('cb_subscription_went_active', $user, $sid);
-      break;
-    case Braintree_Subscription::PAST_DUE:
-      module_invoke_all('cb_subscription_went_past_due', $user, $sid);
-      break;
-  }
-}
-
-
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
@@ -168,9 +66,141 @@ function commerce_braintree_subscription_cb_subscription_went_active($user, $sid
  */
 function commerce_braintree_subscription_cron() {
   watchdog('braintree', 'The system being synchronize transactions from braintree server.');
-  commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "The system being synchronize transactions from braintree server.");
+  $log = new stdClass();
+  $log->action = COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC;
+  $log->message = "The system being synchronize transactions from braintree server.";
+  commerce_braintree_log_save($log);
   commerce_braintree_subscription_synchronization();
 }
+
+/**
+ * Implements of hook_cb_subscription_create().
+ */
+function commerce_braintree_subscription_cb_subscription_created($subscription, $order_id) {
+  $sub = new stdClass();
+  $sub->uid = $GLOBALS['user']->uid;
+  $sub->sid = $subscription->sid;
+  $sub->order_id = $order_id;
+  $sub->status = $subscription->status;
+  $sub->token = $subscription->paymentMethodToken;
+  commerce_braintree_subscription_save($sub);
+}
+
+/**
+ * Save subsciption to local table
+ * @param type $subscription
+ */
+function commerce_braintree_subscription_save($subscription) {
+  $record = array();
+  $record['uid'] = isset($subscription->uid) ? $subscription->uid : $GLOBALS['user']->uid;
+  $record['sid'] = $subscription->sid;
+  $record['order_id'] = $subscription->order_id;
+  $record['pid'] = isset($subscription->pid) ? $subscription->pid : 0;
+  $record['token'] = isset($subscription->token) ? $subscription->token : '';
+  $record['status'] = isset($subscription->status) ? $subscription->status : '';
+  $record['created'] = isset($subscription->created) ? $subscription->created : REQUEST_TIME;
+  $record['last_update'] = REQUEST_TIME;
+  drupal_write_record("commerce_braintree_subscription", $record);
+}
+
+function commerce_braintree_subscription_load($uid, $sid) {
+  $result = db_select('commerce_braintree_subscription', 'c')
+    ->fields('c')
+    ->condition('uid', $uid)
+    ->condition('sid', $sid)
+    ->execute()
+    ->fetchAssoc();
+  return $result;
+}
+
+
+
+/**
+ * Update status of subscription to database
+ * @param type $uid
+ * @param type $sid
+ * @param type $status
+ * @throws Exception
+ */
+function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
+  $subscription = commerce_braintree_subscription_load($uid, $sid);
+  $subscription->status = $status;
+  commerce_braintree_subscription_save($subscription);
+}
+function commmerce_braintree_subscription_status_get($uid, $sid) {
+  $subscription = commerce_braintree_subscription_load($uid, $sid);
+  return isset($subscription->status) ? $subscription->status : FALSE;
+}
+
+/**
+ * Get all subscription
+ * @return type
+ */
+function commmerce_braintree_subscription_get_all() {
+  $result = db_select('commerce_braintree_subscription', 'c')
+    ->fields('c', array('sid', 'uid', 'status'))
+    ->execute()
+    ->fetchAll();
+  return isset($result) ? $result : FALSE;
+}
+/**
+ * Delete subscription by uid and sid
+ * @param type $uid
+ * @param type $sid
+ */
+function commerce_braintree_subscription_delete($uid, $sid) {
+  db_delete('commerce_braintree_subscription')
+  ->condition('uid', $uid)
+  ->condition('sid', $sid)
+  ->execute();
+}
+
+/**
+ * Update status on local by user id and subscription id
+ * @param type $uid
+ * @param type $sid
+ */
+function commmerce_braintree_subscription_status_callback($uid, $sid) {
+  $sub = commerce_braintree_subscription_get_by_id($sid);
+  $status_local = commmerce_braintree_subscription_status_get($uid, $sid);
+  if ($sub->status != $status_local && !$status_local) {
+    commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
+    $user = user_load($uid);
+    commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
+    $log = new stdClass();
+    $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
+    $log->message = "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}";
+    commerce_braintree_log_save($log);
+    return 1;
+  }
+  return 0;
+}
+/**
+ * When updated subscription, callback hook base subscription status to update our users
+ * @param type $kind
+ * @param type $user
+ * @param type $sid
+ */
+function commerce_braintree_subscription_status_callback_hook($kind, $user, $sid) {
+  switch ($kind) {
+    case Braintree_Subscription::CANCELED:
+      module_invoke_all('cb_subscription_canceled', $user, $sid);
+      break;
+    case Braintree_Subscription::EXPIRED:
+      module_invoke_all('cb_subscription_expired', $user, $sid);
+      break;
+    case Braintree_Subscription::ACTIVE:
+      module_invoke_all('cb_subscription_went_active', $user, $sid);
+      break;
+    case Braintree_Subscription::PAST_DUE:
+      module_invoke_all('cb_subscription_went_past_due', $user, $sid);
+      break;
+  }
+}
+
+
+
+
 
 /**
  * Synchronization subscription from braintree server
@@ -190,13 +220,21 @@ function commerce_braintree_subscription_synchronization() {
       commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
       $user = user_load($row->uid);
       commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
-      commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "Updated user {$row->uid} sid {$row->sid} from {$row->status} to {$sub->status}");
+      //log
+      $log = new stdClass();
+      $log->action = COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC;
+      $log->message = "Updated user {$row->uid} sid {$row->sid} from {$row->status} to {$sub->status}";
+      commerce_braintree_log_save($log);
       ++$update;
     }
   }
   
   watchdog('braintree', 'The system synchronized transactions success. Total @update updated, Deleted @delete', array('@update' => $update, '@delete' => $delete), WATCHDOG_ERROR);
-  commerce_braintree_log_write(0, 0, 0, 'synchronization transactions', "The system synchronized transactions success. Total {$update} updated, Deleted {$delete}");
+  //log
+  $log = new stdClass();
+  $log->action = COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC;
+  $log->message = "The system synchronized transactions success. Total {$update} updated, Deleted {$delete}";
+  commerce_braintree_log_save($log);
 }
 
 /**
@@ -204,7 +242,7 @@ function commerce_braintree_subscription_synchronization() {
  * @param type $uid
  * @return boolean
  */
-function commerce_braintree_subscription_load($uid) {
+function commerce_braintree_subscription_load_by_user($uid) {
   $select = db_select('commerce_braintree_subscription', 'c')
     ->fields('c')
     ->condition('uid', $uid)
@@ -220,13 +258,3 @@ function commerce_braintree_subscription_load($uid) {
 }
 
 
-/**
- * Implementation of hook_views_api().
- */
-
-function commerce_braintree_subscription_views_api() {     
-  return array(         
-    'api' => '3.0-alpha1',         
-    'path' => drupal_get_path('module', 'commerce_braintree_subscription') . '/views',     
-  ); 
-}
