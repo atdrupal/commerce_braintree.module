@@ -84,8 +84,8 @@ function commerce_braintree_subscription_cb_subscription_created($subscription, 
   $sub->order_id = $order_id;
   $sub->status = $subscription->subscription->status;
   $sub->token = $subscription->subscription->paymentMethodToken;
-  dsm($sub);
-  //commerce_braintree_subscription_save($sub);
+  //dsm($sub);
+  commerce_braintree_subscription_save($sub);
 }
 
 /**
@@ -93,8 +93,7 @@ function commerce_braintree_subscription_cb_subscription_created($subscription, 
  * @param type $subscription
  */
 function commerce_braintree_subscription_save(stdClass $subscription) {
-  dsm($subscription);
-  $record = array();
+  $record = array();print_r('udpate callbacj');
   $record['uid'] = isset($subscription->uid) ? $subscription->uid : $GLOBALS['user']->uid;
   $record['sid'] = $subscription->sid;
   $record['order_id'] = $subscription->order_id;
@@ -103,26 +102,18 @@ function commerce_braintree_subscription_save(stdClass $subscription) {
   $record['status'] = isset($subscription->status) ? $subscription->status : '';
   $record['created'] = isset($subscription->created) ? $subscription->created : REQUEST_TIME;
   $record['last_update'] = REQUEST_TIME;
-  drupal_write_record("commerce_braintree_subscription", $record, array('uid', 'sid'));
+  $is_upadte = commerce_braintree_subscription_load($record['uid'], $record['sid']);
+  if ($is_upadte == FALSE) {
+    drupal_write_record("commerce_braintree_subscription", $record);
+  }
+  else {
+    print_r('udpate');
+    drupal_write_record("commerce_braintree_subscription", $record, array('uid', 'sid'));
+  }
 }
 
 function commerce_braintree_subscription_load($uid, $sid) {
-  
-  //$result = db_query('SELECT * FROM {commerce_braintree_subscription} c WHERE c.uid = :uid and c.sid = :sid', array(':uid' => $uid, ':sid' => $sid))->fetchObject();
-
-  $result = db_select('commerce_braintree_subscription', 'c')
-    ->fields('c')
-    ->condition('uid', $uid)
-    ->condition('sid', $sid)
-    ->execute()
-    ->fetchAssoc();
-      
-      
-//  $record = $result->fetchObject();  
-  
-  print_r($uid);print_r($sid);
-  echo "\n";
-  print_r($result);
+  $result = db_query('SELECT * FROM {commerce_braintree_subscription} c WHERE c.uid = :uid and c.sid = :sid', array(':uid' => $uid, ':sid' => $sid))->fetchObject();
   return isset($result) ? $result : FALSE;
 }
 
@@ -137,10 +128,7 @@ function commerce_braintree_subscription_load($uid, $sid) {
  */
 function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
   $subscription = commerce_braintree_subscription_load($uid, $sid);
-  //print_r($subscription);
-  //print_r('sadsdasd');
   $subscription->status = $status;
-  
   commerce_braintree_subscription_save($subscription);
 }
 function commmerce_braintree_subscription_status_get($uid, $sid) {
@@ -177,12 +165,13 @@ function commerce_braintree_subscription_delete($uid, $sid) {
  * @param type $sid
  */
 function commmerce_braintree_subscription_status_callback($uid, $sid) {
+  print_r('ca callbacj');
   $sub = commerce_braintree_subscription_get_by_id($sid);
-  $status_local = commmerce_braintree_subscription_status_get($uid, $sid);
-  if ($sub->status != $status_local && !$status_local) {
+  $status_local = commmerce_braintree_subscription_status_get($uid, $sid);print_r('local' .$status_local);
+  if ($sub->status != $status_local) {print_r('ca callbacj if');
     commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
     $user = user_load($uid);
-    //commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
+    commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
     $log = new stdClass();
     $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
     $log->message = "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}";
@@ -235,7 +224,7 @@ function commerce_braintree_subscription_synchronization() {
     if (strcmp($row->status, $sub->status) !=0) {
       commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
       $user = user_load($row->uid);
-      //commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
+      commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
       //log
       $log = new stdClass();
       $log->action = COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC;

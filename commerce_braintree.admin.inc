@@ -87,10 +87,24 @@ function commerce_braintree_webhook_log($kind, $sid) {
  * @param type $sub
  * @return type
  */
-function commerce_braintree_subscription_cancel_link($sid) {
+function commerce_braintree_subscription_cancel_form($form, &$form_state, $sid) {
+  
+  $form['sid'] = array('#type' => 'value', '#value' => $sid);
+
+  $output = confirm_form($form,
+    t('Are you sure you want to cancel the subscription %sid?', array('%sid' => $sid)),
+    'user/' . $GLOBALS['user']->uid . '/subscription',
+    t('This action cannot be undone.'),
+    t('Delete'), t('Cancel'),
+    'confirm'
+  );
+  return $output;
+}
+
+function commerce_braintree_subscription_cancel_form_submit($form, &$form_state) {
+  $sid = $form_state['values']['sid'];
   $result = commerce_braintree_subscription_cancel($sid, $message);
-  drupal_set_message(check_plain($message), $result ? "status" : "error");
-  return '<div>' . $message . '</div>';
+  $form_state['redirect'] = 'user/' . $GLOBALS['user']->uid . '/subscription';
 }
 
 /**
@@ -136,11 +150,11 @@ function commerce_braintree_subscription_overview($user) {
     //$plan_id = (strcmp($sub->status, 'Canceled') != 0) ? $sub->planId : '';
     
     $first_billing_date = $sub->firstBillingDate->format('m/d/Y');
-    $next_billing_date = $sub->nextBillingDate->format('m/d/Y');
+    $next_billing_date = (strcmp($sub->status, 'Canceled') != 0) ? $sub->nextBillingDate->format('m/d/Y') : '-';
     $billing_period_start_date = $sub->billingPeriodStartDate->format('m/d/Y');
     $billing_period_end_date = $sub->billingPeriodEndDate->format('m/d/Y');
     $paid_through_date = $sub->paidThroughDate->format('m/d/Y');
-    $next_bill_amount = $sub->nextBillAmount;
+    $next_bill_amount = (strcmp($sub->status, 'Canceled') != 0) ? $sub->nextBillAmount : '-';
     $rows[] = array($product->title, 
                 $price,
                 $first_billing_date,
