@@ -6,7 +6,7 @@
  * Implementation of hook_cb_send_data_braintree().
  */
 function commerce_braintree_log_cb_send_data_braintree($data, $action, $message) {
-  $data = is_array($data) ? $data : objectToArray($data);
+  //$data = is_array($data) ? $data : objectToArray($data);
 //  if (!is_array($data)) {
 //    $json  = json_encode($data);
 //    $data = json_decode($json, true);
@@ -37,11 +37,12 @@ function commerce_braintree_log_cb_receive_data_braintree($data, $action, $messa
  * @param stdClass $log
  */
 function commerce_braintree_log_save(stdClass $log) {
+  $data = is_array($log->data) ? serialize($log->data) : $log->data;
   $record = array();
   $record['uid'] = isset($log->uid) ? $log->uid : $GLOBALS['user']->uid;
   $record['action'] = isset($log->action) ? $log->action : 'default';
   $record['message'] = isset($log->message) ? $log->message : '';
-  $record['data'] = isset($log->data) ? serialize($log->data) : '';
+  $record['data'] = isset($data) ? $data : '';//serialize($log->data) : '';
   $record['timestamp'] = REQUEST_TIME;
   drupal_write_record("commerce_braintree_log", $record);
 }

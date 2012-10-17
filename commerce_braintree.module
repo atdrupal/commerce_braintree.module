@@ -301,6 +301,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
       drupal_set_message($message, 'error');
     }
     commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
+    return FALSE;
     return;
   }
 

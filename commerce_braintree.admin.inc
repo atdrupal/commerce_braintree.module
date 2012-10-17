@@ -73,12 +73,12 @@ function commerce_braintree_callback_hook($kind, $user, $sid) {
 
 function commerce_braintree_webhook_log($kind, $sid) {
   if (!isset($sid)) {
-    commerce_braintree_log_write($cid, $sid, 0, $kind, 'webhook callback failed. does not subscription id');
+    //commerce_braintree_log_write($cid, $sid, 0, $kind, 'webhook callback failed. does not subscription id');
     return;
   }
   $sub = commerce_braintree_subscription_get_by_id($sid);
   $cid = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
-  commerce_braintree_log_write($cid, $sid, 0, $kind, 'webhook callback');
+  //commerce_braintree_log_write($cid, $sid, 0, $kind, 'webhook callback');
 }
 
 

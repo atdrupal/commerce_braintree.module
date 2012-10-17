@@ -47,6 +47,22 @@ function commerce_braintree_subscription_views_data() {
       'handler' => 'views_handler_argument_numeric',
     ),
   );
+  $data['commerce_braintree_subscription']['pid'] = array(
+    'title' => t('The profile id'), 
+    'help' => t('The profile.'), 
+    'field' => array(
+      'click sortable' => TRUE,
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ), 
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
   $data['commerce_braintree_subscription']['status'] = array(
     'title' => t('Braintree subscription status'), 
     'help' => t('The subscription status.'), 
@@ -129,6 +145,16 @@ function commerce_braintree_subscription_views_data() {
       'base' => 'commerce_order',
       'field' => 'order_id',
       'label' => t('Order id of subscription'),
+    ),
+  );
+  $data['commerce_braintree_subscription']['pid'] = array(
+    'title' => t('Profile relative'),
+    'help' => t('Profile relative.'),
+    'relationship' => array(
+      'handler' => 'views_handler_relationship',
+      'base' => 'profile',
+      'field' => 'pid',
+      'label' => t('Profile id'),
     ),
   );
   

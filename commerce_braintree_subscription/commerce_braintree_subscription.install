@@ -10,8 +10,8 @@ function commerce_braintree_subscription_schema() {
     'fields' => array(
       'uid' => array(
         'description' => 'The user id.', 
-        'type' => 'serial', 
-        'unsigned' => TRUE, 
+        'type' => 'int', 
+        //'unsigned' => TRUE, 
         'not null' => TRUE,
       ), 
       'sid' => array(
@@ -25,40 +25,40 @@ function commerce_braintree_subscription_schema() {
         'type' => 'int', 
         'unsigned' => TRUE, 
         //'not null' => TRUE, 
-        'default' => 0,
+        'default' => NULL,
       ), 
       'pid' => array(
         'description' => 'Pofiles id', 
         'type' => 'int', 
         'unsigned' => TRUE, 
         //'not null' => TRUE, 
-        'default' => 0,
+        'default' => NULL,
       ), 
       'token' => array(
         'description' => 'Credit card token.', 
         'type' => 'varchar', 
         'length' => 255, 
         //'not null' => TRUE, 
-        'default' => 0,
+        'default' => NULL,
       ), 
       'status' => array(
         'description' => 'Subscription id on braintree.', 
         'type' => 'varchar', 
         'length' => 255, 
         //'not null' => TRUE, 
-        'default' => 0,
+        'default' => NULL,
       ), 
       'created' => array(
         'description' => 'The Unix timestamp at create.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0,
+        'default' => NULL,
       ),
       'last_update' => array(
         'description' => 'The Unix timestamp at last update.',
         'type' => 'int',
         'not null' => TRUE,
-        'default' => 0,
+        'default' => NULL,
       ),
       
     ), 

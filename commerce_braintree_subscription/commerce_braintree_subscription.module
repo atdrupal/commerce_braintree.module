@@ -77,13 +77,15 @@ function commerce_braintree_subscription_cron() {
  * Implements of hook_cb_subscription_create().
  */
 function commerce_braintree_subscription_cb_subscription_created($subscription, $order_id) {
+  
   $sub = new stdClass();
   $sub->uid = $GLOBALS['user']->uid;
   $sub->sid = $subscription->subscription->id;
   $sub->order_id = $order_id;
   $sub->status = $subscription->subscription->status;
   $sub->token = $subscription->subscription->paymentMethodToken;
-  commerce_braintree_subscription_save($sub);
+  dsm($sub);
+  //commerce_braintree_subscription_save($sub);
 }
 
 /**
@@ -91,16 +93,17 @@ function commerce_braintree_subscription_cb_subscription_created($subscription, 
  * @param type $subscription
  */
 function commerce_braintree_subscription_save(stdClass $subscription) {
+  dsm($subscription);
   $record = array();
   $record['uid'] = isset($subscription->uid) ? $subscription->uid : $GLOBALS['user']->uid;
   $record['sid'] = $subscription->sid;
   $record['order_id'] = $subscription->order_id;
-  $record['pid'] = isset($subscription->pid) ? $subscription->pid : 0;
+  $record['pid'] = isset($subscription->pid) ? $subscription->pid : NULL;
   $record['token'] = isset($subscription->token) ? $subscription->token : '';
   $record['status'] = isset($subscription->status) ? $subscription->status : '';
   $record['created'] = isset($subscription->created) ? $subscription->created : REQUEST_TIME;
   $record['last_update'] = REQUEST_TIME;
-  drupal_write_record("commerce_braintree_subscription", $record);
+  drupal_write_record("commerce_braintree_subscription", $record, array('uid', 'sid'));
 }
 
 function commerce_braintree_subscription_load($uid, $sid) {
@@ -109,8 +112,10 @@ function commerce_braintree_subscription_load($uid, $sid) {
     ->condition('uid', $uid)
     ->condition('sid', $sid)
     ->execute()
-    ->fetchAssoc();
-  return $result;
+    ->fetchObject();
+  
+print_r($result);print_r('sadsdasd');
+  return isset($result) ? $result : FALSE;
 }
 
 
@@ -124,7 +129,10 @@ function commerce_braintree_subscription_load($uid, $sid) {
  */
 function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
   $subscription = commerce_braintree_subscription_load($uid, $sid);
+  //print_r($subscription);
+  //print_r('sadsdasd');
   $subscription->status = $status;
+  
   commerce_braintree_subscription_save($subscription);
 }
 function commmerce_braintree_subscription_status_get($uid, $sid) {
