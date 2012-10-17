@@ -439,18 +439,21 @@ function commerce_braintree_initialize_library() {
 function commerce_braintree_credit_card_create($credit_card) {
   commerce_braintree_initialize_library();
   module_invoke_all('cb_send_data_braintree', $credit_card, COMMERCE_BRAINTREE_CREDITCARD_CREATE, '');
+  
   $result = Braintree_CreditCard::create($credit_card);
-  if ($result->success) {
-    module_invoke_all('cb_creditcard_created', $result);
-    return $result;
-  }
+  
+  module_invoke_all('cb_creditcard_created', $result);
+  module_invoke_all('cb_receive_data_braintree', $result, COMMERCE_BRAINTREE_CREDITCARD_CREATE, '');
+  return ($result->success) ? $result : FALSE;
+}
+
+function commerce_braintree_get_errors($result) {
+  $message = '';
   foreach ($result->errors->deepAll() AS $error) {
       $message .= $error->code . ": " . $error->message . "\n";
   }
-  module_invoke_all('cb_receive_data_braintree', $result, COMMERCE_BRAINTREE_CREDITCARD_CREATE, $message);
-  return FALSE;
+  return $message;
 }
-
 /**
  * Create new customer
  * @param type $customer
@@ -459,25 +462,20 @@ function commerce_braintree_credit_card_create($credit_card) {
  */
 function commerce_braintree_customer_create($customer, &$message = "") {
   //Initializes the Braintree Library
-  $load = commerce_braintree_initialize_library();
-  if ($load == FALSE) {    
-    return FALSE;  
-  }
+  commerce_braintree_initialize_library();
   module_invoke_all('cb_send_data_braintree', $customer, COMMERCE_BRAINTREE_CUSTOMER_CREATE, $message);
   //create customer
   $customer = Braintree_Customer::create($customer);
+
   if ($customer->success) {
     $message = "Customer was created.";
-    //commerce_braintree_log_write(0, 0, $nid, $action, $message);
     module_invoke_all('cb_customer_created', $customer);
-    return $customer;
   } 
-  
-  foreach ($customer->errors->deepAll() AS $error) {
-      $message .= $error->code . ": " . $error->message . "\n";
+  else {
+    $message = commerce_braintree_get_errors($customer);
   }
   module_invoke_all('cb_receive_data_braintree', $customer, COMMERCE_BRAINTREE_CUSTOMER_CREATE, $message);
-  return FALSE; 
+  return ($customer->success) ? $customer : FALSE; 
 }
 
 /**
@@ -641,12 +639,13 @@ function commerce_braintree_subscription_create($order_id, $token, $plan_id, &$m
   ); 
   module_invoke_all('cb_send_data_braintree', $subscription, COMMERCE_BRAINTREE_SUBSCRIPTION_CREATE, '');
   $sub = Braintree_Subscription::create($subscription);
-  $message = "Transaction is successsfull";
-  foreach ($sub->errors->deepAll() AS $error) {
-      $errors .= $error->code . ": " . $error->message . "\n";
+  if ($sub->success) {
+    $message = "Transaction is successsfull";
+    module_invoke_all('cb_subscription_created', $sub, $order_id);
   }
-  $message = isset($errors) ? $errors : $message;
-  module_invoke_all('cb_subscription_created', $sub, $order_id);
+  else {
+    $message = commerce_braintree_get_errors($sub);
+  }
   module_invoke_all('cb_receive_data_braintree', $sub, COMMERCE_BRAINTREE_SUBSCRIPTION_CREATE, $message);
   return  $sub->success ? $sub : FALSE;
 }
@@ -664,10 +663,7 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
   module_invoke_all('cb_send_data_braintree', $subscription_id, $action, '');
   try {
     $result = Braintree_Subscription::cancel($subscription_id);
-    foreach ($result->errors->deepAll() AS $error) {
-        $errors .= $error->code . ": " . $error->message . "\n";
-    }
-    $message = isset($$errors) ? $errors : $message = "Subscription {$subscription_id} was canceled!";
+    $message = $result->success ? "Subscription {$subscription_id} was canceled!" : commerce_braintree_get_errors($result);
     module_invoke_all('cb_receive_data_braintree', $result, $action, $message);
   } catch (Exception $e) {
     $message = $e->getMessage();

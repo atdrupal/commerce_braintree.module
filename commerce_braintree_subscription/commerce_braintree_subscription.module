@@ -79,10 +79,10 @@ function commerce_braintree_subscription_cron() {
 function commerce_braintree_subscription_cb_subscription_created($subscription, $order_id) {
   $sub = new stdClass();
   $sub->uid = $GLOBALS['user']->uid;
-  $sub->sid = $subscription->id;
+  $sub->sid = $subscription->subscription->id;
   $sub->order_id = $order_id;
-  $sub->status = $subscription->status;
-  $sub->token = $subscription->paymentMethodToken;
+  $sub->status = $subscription->subscription->status;
+  $sub->token = $subscription->subscription->paymentMethodToken;
   commerce_braintree_subscription_save($sub);
 }
 
@@ -90,7 +90,7 @@ function commerce_braintree_subscription_cb_subscription_created($subscription, 
  * Save subsciption to local table
  * @param type $subscription
  */
-function commerce_braintree_subscription_save($subscription) {
+function commerce_braintree_subscription_save(stdClass $subscription) {
   $record = array();
   $record['uid'] = isset($subscription->uid) ? $subscription->uid : $GLOBALS['user']->uid;
   $record['sid'] = $subscription->sid;
