@@ -107,14 +107,22 @@ function commerce_braintree_subscription_save(stdClass $subscription) {
 }
 
 function commerce_braintree_subscription_load($uid, $sid) {
+  
+  //$result = db_query('SELECT * FROM {commerce_braintree_subscription} c WHERE c.uid = :uid and c.sid = :sid', array(':uid' => $uid, ':sid' => $sid))->fetchObject();
+
   $result = db_select('commerce_braintree_subscription', 'c')
     ->fields('c')
     ->condition('uid', $uid)
     ->condition('sid', $sid)
     ->execute()
-    ->fetchObject();
+    ->fetchAssoc();
+      
+      
+//  $record = $result->fetchObject();  
   
-print_r($result);print_r('sadsdasd');
+  print_r($uid);print_r($sid);
+  echo "\n";
+  print_r($result);
   return isset($result) ? $result : FALSE;
 }
 
@@ -174,7 +182,7 @@ function commmerce_braintree_subscription_status_callback($uid, $sid) {
   if ($sub->status != $status_local && !$status_local) {
     commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
     $user = user_load($uid);
-    commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
+    //commerce_braintree_subscription_status_callback_hook($sub->status, $user, $sid);
     $log = new stdClass();
     $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
     $log->message = "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}";
@@ -227,7 +235,7 @@ function commerce_braintree_subscription_synchronization() {
     if (strcmp($row->status, $sub->status) !=0) {
       commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
       $user = user_load($row->uid);
-      commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
+      //commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
       //log
       $log = new stdClass();
       $log->action = COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC;
