@@ -7,7 +7,7 @@
 /**
  * Implements hook_views_default_views().
  */
-function commerce_braintree_views_default_views() {
+function commerce_braintree_log_views_default_views() {
   $export = array();
 
   $view = new view();

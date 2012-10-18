@@ -2,5 +2,8 @@ name = Braintree Log
 description = BrainTree Payment Log
 dependencies[] = commerce_braintree
 package = "Viet Coop"
+
+files[] = views/handlers/commerce_braintree_log_handler_field_log_view_link.inc
+
 core = 7.x
 version = 7.x-1.0-beta1

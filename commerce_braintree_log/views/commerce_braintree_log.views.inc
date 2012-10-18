@@ -8,7 +8,7 @@
  * Implementation of hook_views_data().
  * @return type
  */
-function commerce_braintree_views_data() {
+function commerce_braintree_log_views_data() {
   $data = array();
 
   $data['commerce_braintree_log']['table']['group']  = t('Commerce braintree log');
@@ -125,6 +125,13 @@ function commerce_braintree_views_data() {
       'label' => t('User log'),
     ),
   );
-  
+  //link view
+  $data['commerce_braintree_log']['id'] = array(
+    'field' => array(
+      'title' => t('Link view'),
+      'help' => t('Provide a simple link to view log detail.'),
+      'handler' => 'commerce_braintree_log_handler_field_log_view_link',
+    ),
+  );
   return $data;
 }

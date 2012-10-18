@@ -7,11 +7,11 @@
 /**
  * Field handler to present a link to cancel subscription.
  */
-class commerce_braintree_subscription_handler_field_subscription_cancel_link extends views_handler_field {
+class commerce_braintree_log_handler_field_log_view_link extends views_handler_field {
   function construct() {
     parent::construct();
 
-    $this->additional_fields['pid'] = 'pid';
+    $this->additional_fields['id'] = 'id';
   }
 
   function option_definition() {
@@ -39,8 +39,8 @@ class commerce_braintree_subscription_handler_field_subscription_cancel_link ext
 
   function render($values) {
     $text = !empty($this->options['text']) ? $this->options['text'] : t('cancel');
-    $pid = $this->get_value($values, 'pid');
+    $id = $this->get_value($values, 'id');
 
-    return l($text, 'braintree/' . $pid . '/cancel');
+    return l($text, 'admin/commerce/braintree/log/detail/' . $id);
   }
 }

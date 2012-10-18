@@ -173,10 +173,6 @@ function commerce_braintree_subscription_delete($uid, $sid) {
  */
 function commmerce_braintree_subscription_status_callback($uid, $sid) {
   $sub = commerce_braintree_subscription_get_by_id($sid);
-//  if ($sub == FALSE) {
-//    return 0;
-//  }
-  dsm($sub);return;
   $status_local = commmerce_braintree_subscription_status_get($uid, $sid);
   if ($sub->status != $status_local) {
     commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
@@ -258,22 +254,15 @@ function commerce_braintree_subscription_load_by_user($uid) {
   $select = db_select('commerce_braintree_subscription', 'c')
     ->fields('c')
     ->condition('uid', $uid)
-    ->execute();
-  if (!$select) {
-    return FALSE;
-  }
-  $result = array();
-  foreach ($select as $values) {
-    $result[] = $values;
-  }
-  return $result;
+    ->execute()->fetchAll();
+  return isset($select) ? $select : FALSE;
 }
 
 
 
-function commerce_braintree_subscription_get_sid_by_pid($pid) {
+function commerce_braintree_subscription_get_by_pid($pid) {
   $select = db_select('commerce_braintree_subscription', 'c')
-    ->fields('c','sid')
+    ->fields('c')
     ->condition('pid', $pid)
     ->condition('status', 'Canceled', '<>')
     ->execute()

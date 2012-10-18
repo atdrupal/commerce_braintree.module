@@ -120,16 +120,15 @@ function commerce_braintree_permission() {
  * @param type $sub
  * @return boolean
  */
-function commerce_braintree_subscription_cancel_access($sid) {
-  $sub = commerce_braintree_subscription_get_by_id($sid);
+function commerce_braintree_subscription_cancel_access($pid) {
+  $sub = commerce_braintree_subscription_get_by_pid($pid);
   if ($sub == FALSE) {
     return FALSE;
   }
-  $customer = commerce_braintree_customer_get_by_token($sub->paymentMethodToken);
   if (user_access('cancel any user')) {
     return TRUE;
   }
-  if ($GLOBALS['user']->uid == $customer && user_access('cancel own user')) {
+  if ($GLOBALS['user']->uid == $sub['uid'] && user_access('cancel own user')) {
     return TRUE;
   }
   return FALSE;

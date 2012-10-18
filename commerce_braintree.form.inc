@@ -423,10 +423,13 @@ function commerce_braintree_form_upgrade() {
  */
 function commerce_braintree_subscription_cancel_form($form, &$form_state, $pid) {
   
-  $form['sid'] = array('#type' => 'value', '#value' => $pid);
+  $sub =  commerce_braintree_subscription_get_by_pid($pid);
+  
+  $form['sid'] = array('#type' => 'value', '#value' => $sub['sid']);
+  
   $profile = profile2_load($pid);
   $output = confirm_form($form,
-    t('Are you sure you want to cancel the subscription %pid?', array('%sid' => $sid)),
+    t('Are you sure you want to cancel the subscription %pid?', array('%pid' => $profile->label)),
     'user/' . $GLOBALS['user']->uid . '/subscription',
     t('This action cannot be undone.'),
     t('Delete'), t('Cancel'),
