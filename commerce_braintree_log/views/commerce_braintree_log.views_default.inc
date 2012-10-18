@@ -90,32 +90,42 @@ function commerce_braintree_log_views_default_views() {
   $handler->display->display_options['relationships']['uid']['id'] = 'uid';
   $handler->display->display_options['relationships']['uid']['table'] = 'commerce_braintree_log';
   $handler->display->display_options['relationships']['uid']['field'] = 'uid';
+  /* Field: Commerce braintree log: Create date */
+  $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
+  $handler->display->display_options['fields']['timestamp']['table'] = 'commerce_braintree_log';
+  $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
+  $handler->display->display_options['fields']['timestamp']['date_format'] = 'short';
+  /* Field: Commerce braintree log: Braintree log action */
+  $handler->display->display_options['fields']['action']['id'] = 'action';
+  $handler->display->display_options['fields']['action']['table'] = 'commerce_braintree_log';
+  $handler->display->display_options['fields']['action']['field'] = 'action';
+  $handler->display->display_options['fields']['action']['label'] = 'Action';
+  $handler->display->display_options['fields']['action']['alter']['max_length'] = '30';
+  $handler->display->display_options['fields']['action']['alter']['trim'] = TRUE;
+  /* Field: Commerce braintree log: Braintree log message */
+  $handler->display->display_options['fields']['message']['id'] = 'message';
+  $handler->display->display_options['fields']['message']['table'] = 'commerce_braintree_log';
+  $handler->display->display_options['fields']['message']['field'] = 'message';
+  $handler->display->display_options['fields']['message']['label'] = 'Message';
+  $handler->display->display_options['fields']['message']['alter']['max_length'] = '50';
+  $handler->display->display_options['fields']['message']['alter']['trim'] = TRUE;
+  /* Field: Commerce braintree log: Braintree log data */
+  $handler->display->display_options['fields']['data']['id'] = 'data';
+  $handler->display->display_options['fields']['data']['table'] = 'commerce_braintree_log';
+  $handler->display->display_options['fields']['data']['field'] = 'data';
+  $handler->display->display_options['fields']['data']['label'] = 'Data';
+  $handler->display->display_options['fields']['data']['alter']['max_length'] = '30';
+  $handler->display->display_options['fields']['data']['alter']['trim'] = TRUE;
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
   $handler->display->display_options['fields']['name']['field'] = 'name';
   $handler->display->display_options['fields']['name']['relationship'] = 'uid';
   $handler->display->display_options['fields']['name']['label'] = 'User Name';
-  /* Field: Commerce braintree log: Braintree log sid */
-  $handler->display->display_options['fields']['sid']['id'] = 'sid';
-  $handler->display->display_options['fields']['sid']['table'] = 'commerce_braintree_log';
-  $handler->display->display_options['fields']['sid']['field'] = 'sid';
-  $handler->display->display_options['fields']['sid']['label'] = 'Subscription';
-  /* Field: Commerce braintree log: Braintree log action */
-  $handler->display->display_options['fields']['action']['id'] = 'action';
-  $handler->display->display_options['fields']['action']['table'] = 'commerce_braintree_log';
-  $handler->display->display_options['fields']['action']['field'] = 'action';
-  $handler->display->display_options['fields']['action']['label'] = 'Action';
-  /* Field: Commerce braintree log: Braintree log message */
-  $handler->display->display_options['fields']['message']['id'] = 'message';
-  $handler->display->display_options['fields']['message']['table'] = 'commerce_braintree_log';
-  $handler->display->display_options['fields']['message']['field'] = 'message';
-  $handler->display->display_options['fields']['message']['label'] = 'Message';
-  /* Field: Commerce braintree log: Create date */
-  $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
-  $handler->display->display_options['fields']['timestamp']['table'] = 'commerce_braintree_log';
-  $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
-  $handler->display->display_options['fields']['timestamp']['date_format'] = 'short';
+  /* Field: Commerce braintree log: Link view */
+  $handler->display->display_options['fields']['id']['id'] = 'id';
+  $handler->display->display_options['fields']['id']['table'] = 'commerce_braintree_log';
+  $handler->display->display_options['fields']['id']['field'] = 'id';
   /* Filter criterion: Commerce braintree log: Braintree log action */
   $handler->display->display_options['filters']['action']['id'] = 'action';
   $handler->display->display_options['filters']['action']['table'] = 'commerce_braintree_log';
@@ -155,25 +165,6 @@ function commerce_braintree_log_views_default_views() {
     6 => 0,
     7 => 0,
   );
-  /* Filter criterion: Commerce braintree log: Braintree log sid */
-  $handler->display->display_options['filters']['sid']['id'] = 'sid';
-  $handler->display->display_options['filters']['sid']['table'] = 'commerce_braintree_log';
-  $handler->display->display_options['filters']['sid']['field'] = 'sid';
-  $handler->display->display_options['filters']['sid']['operator'] = 'word';
-  $handler->display->display_options['filters']['sid']['exposed'] = TRUE;
-  $handler->display->display_options['filters']['sid']['expose']['operator_id'] = 'sid_op';
-  $handler->display->display_options['filters']['sid']['expose']['label'] = 'Subscription Id';
-  $handler->display->display_options['filters']['sid']['expose']['operator'] = 'sid_op';
-  $handler->display->display_options['filters']['sid']['expose']['identifier'] = 'sid';
-  $handler->display->display_options['filters']['sid']['expose']['remember_roles'] = array(
-    2 => '2',
-    1 => 0,
-    3 => 0,
-    4 => 0,
-    5 => 0,
-    6 => 0,
-    7 => 0,
-  );
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
@@ -181,14 +172,15 @@ function commerce_braintree_log_views_default_views() {
   $handler->display->display_options['path'] = 'admin/commerce/braintree/log';
   $handler->display->display_options['menu']['type'] = 'tab';
   $handler->display->display_options['menu']['title'] = 'Log';
-  $handler->display->display_options['menu']['weight'] = '10';
+  $handler->display->display_options['menu']['weight'] = '1';
   $handler->display->display_options['menu']['name'] = 'management';
   $handler->display->display_options['menu']['context'] = 0;
-  $handler->display->display_options['tab_options']['type'] = 'normal';
+  $handler->display->display_options['tab_options']['type'] = 'tab';
   $handler->display->display_options['tab_options']['title'] = 'Braintree log';
   $handler->display->display_options['tab_options']['description'] = 'View log';
   $handler->display->display_options['tab_options']['weight'] = '0';
   $handler->display->display_options['tab_options']['name'] = 'management';
+
 
   $export['commerce_braintree_log'] = $view;
 

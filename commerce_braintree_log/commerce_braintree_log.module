@@ -1,5 +1,20 @@
 <?php
 
+/**
+ * Implementation of hook_views_api().
+ */
+
+function commerce_braintree_log_views_api() {     
+  return array(         
+    'api' => '3.0-alpha1',         
+    'path' => drupal_get_path('module', 'commerce_braintree_log') . '/views',     
+  ); 
+}
+
+
+/**
+ * Implementation of hook_menu().
+ */
 
 function commerce_braintree_log_menu() {
   $items['admin/commerce/braintree/log/detail/%'] = array(
@@ -10,7 +25,7 @@ function commerce_braintree_log_menu() {
     'file' => 'commerce_braintree_log.admin.inc',
     'type' => MENU_CALLBACK,
   );
-  return $items;
+  //return $items;
 }
 
 function commerce_braintree_log_permission() {
@@ -61,3 +76,4 @@ function commerce_braintree_log_save(stdClass $log) {
   $record['timestamp'] = REQUEST_TIME;
   drupal_write_record("commerce_braintree_log", $record);
 }
+

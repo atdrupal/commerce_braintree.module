@@ -45,20 +45,7 @@ function commerce_braintree_menu() {
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
     'file' => 'commerce_braintree.admin.inc',
   );
-  $items['user/%user/subscription/overview'] = array(
-    'title' => 'Subscription',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-  
-  $items['user/%user/subscription/customer'] = array(
-    'title' => 'Customer recurring billing',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_form_customer', 1),
-    'access callback' => 'commerce_braintree_customer_acess',
-    'access arguments' => array(1),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'commerce_braintree.form.inc',
-  );
+
   $items['user/subscription/credit-card/%/edit'] = array(
     'title' => 'Credit card edit',
     'page callback' => 'drupal_get_form',
@@ -924,18 +911,6 @@ function commerce_braintree_get_orders_by_uid($uid) {
 }
 
 /**
- * Callback access edit customer form
- * @global type $user
- * @return boolean
- */
-function commerce_braintree_customer_acess($user) {
-  if (!commerce_braintree_customer_get($user->uid)) {
-    return FALSE;
-  }
-  return TRUE;  
-}
-
-/**
  * Load user by subscripton id
  * @param type $subscription_id
  * @return type
@@ -971,15 +946,6 @@ function commerce_braintreee_string_to_star($str) {
 
 
 
-/**
- * Implementation of hook_views_api().
- */
 
-function commerce_braintree_views_api() {     
-  return array(         
-    'api' => '3.0-alpha1',         
-    'path' => drupal_get_path('module', 'commerce_braintree') . '/views',     
-  ); 
-}
 
 

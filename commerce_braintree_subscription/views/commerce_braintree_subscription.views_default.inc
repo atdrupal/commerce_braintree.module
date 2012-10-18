@@ -101,17 +101,20 @@ function commerce_braintree_subscription_views_default_views() {
   $handler->display->display_options['relationships']['uid']['id'] = 'uid';
   $handler->display->display_options['relationships']['uid']['table'] = 'commerce_braintree_subscription';
   $handler->display->display_options['relationships']['uid']['field'] = 'uid';
+  /* Relationship: Commerce braintree subscription: Profile relative */
+  $handler->display->display_options['relationships']['pid']['id'] = 'pid';
+  $handler->display->display_options['relationships']['pid']['table'] = 'commerce_braintree_subscription';
+  $handler->display->display_options['relationships']['pid']['field'] = 'pid';
+  /* Field: Profile: Type */
+  $handler->display->display_options['fields']['type']['id'] = 'type';
+  $handler->display->display_options['fields']['type']['table'] = 'profile';
+  $handler->display->display_options['fields']['type']['field'] = 'type';
+  $handler->display->display_options['fields']['type']['relationship'] = 'pid';
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
   $handler->display->display_options['fields']['name']['field'] = 'name';
   $handler->display->display_options['fields']['name']['relationship'] = 'uid';
-  /* Field: Commerce Order: Order ID */
-  $handler->display->display_options['fields']['order_id']['id'] = 'order_id';
-  $handler->display->display_options['fields']['order_id']['table'] = 'commerce_order';
-  $handler->display->display_options['fields']['order_id']['field'] = 'order_id';
-  $handler->display->display_options['fields']['order_id']['relationship'] = 'order_id';
-  $handler->display->display_options['fields']['order_id']['link_to_order'] = 'customer';
   /* Field: Commerce braintree subscription: Braintree subscription id */
   $handler->display->display_options['fields']['sid']['id'] = 'sid';
   $handler->display->display_options['fields']['sid']['table'] = 'commerce_braintree_subscription';
@@ -132,6 +135,11 @@ function commerce_braintree_subscription_views_default_views() {
   $handler->display->display_options['fields']['last_update']['table'] = 'commerce_braintree_subscription';
   $handler->display->display_options['fields']['last_update']['field'] = 'last_update';
   $handler->display->display_options['fields']['last_update']['date_format'] = 'short';
+  /* Field: Commerce braintree subscription: Link edit */
+  $handler->display->display_options['fields']['link_edit_credit_card']['id'] = 'link_edit_credit_card';
+  $handler->display->display_options['fields']['link_edit_credit_card']['table'] = 'commerce_braintree_subscription';
+  $handler->display->display_options['fields']['link_edit_credit_card']['field'] = 'link_edit_credit_card';
+  $handler->display->display_options['fields']['link_edit_credit_card']['label'] = 'Credit Card';
   /* Field: Commerce braintree subscription: Link cancel */
   $handler->display->display_options['fields']['link_cancel_subscription']['id'] = 'link_cancel_subscription';
   $handler->display->display_options['fields']['link_cancel_subscription']['table'] = 'commerce_braintree_subscription';

@@ -120,8 +120,8 @@ function commerce_braintree_subscription_overview($user) {
       commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
     }
     $status = $sub->status;
-    $price = $sub->price;
-    //$plan_id = (strcmp($sub->status, 'Canceled') != 0) ? $sub->planId : '';
+    $proifle = profile2_load($row->pid);
+    $price_display = commerce_currency_format($product->commerce_price[LANGUAGE_NONE]['0']['amount'], $product->commerce_price[LANGUAGE_NONE]['0']['currency_code'], $product);
     
     $first_billing_date = $sub->firstBillingDate->format('m/d/Y');
     $next_billing_date = (strcmp($sub->status, 'Canceled') != 0) ? $sub->nextBillingDate->format('m/d/Y') : '-';
@@ -129,19 +129,21 @@ function commerce_braintree_subscription_overview($user) {
     $billing_period_end_date = $sub->billingPeriodEndDate->format('m/d/Y');
     $paid_through_date = $sub->paidThroughDate->format('m/d/Y');
     $next_bill_amount = (strcmp($sub->status, 'Canceled') != 0) ? $sub->nextBillAmount : '-';
-    $rows[] = array($product->title, 
-                $price,
+    
+    $rows[] = array($proifle->label, 
+                $price_display,
                 $first_billing_date,
                 $billing_period_start_date . ' - ' . $billing_period_end_date,
                 $paid_through_date,
                 $next_billing_date,
                 $next_bill_amount,
                 $status, 
-                (strcmp($sub->status, 'Canceled') != 0) ? l(t("cancel"), "braintree/{$row->pid}/cancel") : ''
+                (strcmp($sub->status, 'Canceled') != 0) ? l(t("edit"), "user/subscription/credit-card/{$row->token}/edit") : '',
+                (strcmp($sub->status, 'Canceled') != 0) ? l(t("cancel"), "braintree/{$row->pid}/cancel") : '',
               );
   }
     
-  $header = array('Title', 
+  $header = array('Profile', 
               'Price',
               'First Bill Date',
               'Current Billing Period',
@@ -149,7 +151,8 @@ function commerce_braintree_subscription_overview($user) {
               'Next Bill Date',
               'Next Billing Period Amount', 
               'Status', 
-              'Operation'
+              'Credit Card',
+              'Cancel'
             );
   
   $output = theme('table', array('header' => $header,

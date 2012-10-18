@@ -38,7 +38,7 @@ class commerce_braintree_log_handler_field_log_view_link extends views_handler_f
   }
 
   function render($values) {
-    $text = !empty($this->options['text']) ? $this->options['text'] : t('cancel');
+    $text = !empty($this->options['text']) ? $this->options['text'] : t('view');
     $id = $this->get_value($values, 'id');
 
     return l($text, 'admin/commerce/braintree/log/detail/' . $id);
