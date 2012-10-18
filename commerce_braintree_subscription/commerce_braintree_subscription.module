@@ -77,15 +77,23 @@ function commerce_braintree_subscription_cron() {
  * Implements of hook_cb_subscription_create().
  */
 function commerce_braintree_subscription_cb_subscription_created($subscription, $order_id) {
-  
   $sub = new stdClass();
   $sub->uid = $GLOBALS['user']->uid;
   $sub->sid = $subscription->subscription->id;
+  $sub->pid = commerce_braintree_subscription_profile_get($sub->uid, $sub->id);
   $sub->order_id = $order_id;
   $sub->status = $subscription->subscription->status;
   $sub->token = $subscription->subscription->paymentMethodToken;
-  //dsm($sub);
   commerce_braintree_subscription_save($sub);
+}
+
+function commerce_braintree_subscription_profile_get($uid, $sid) {
+  $sub = commerce_braintree_subscription_get_by_id($sid);
+  $type = $sub->planId;
+  $profile = profile2_by_uid_load($uid, $type);
+  profile2_save($profile);
+  $result = profile2_by_uid_load($uid, $type);
+  return isset($result) ? $result->pid : NULL;
 }
 
 /**
