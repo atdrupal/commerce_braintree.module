@@ -36,7 +36,7 @@ function commerce_braintree_log_detail($id) {
       '#rows' => $rows,
       '#attributes' => array('class' => array('log-event')),
     );
-    $build['dblog_clear_log_form'] = drupal_get_form('commerce_braintree_log_data_view_form', $id);
+    $build['log_data_form'] = drupal_get_form('commerce_braintree_log_data_view_form', $id);
     return $build;
   }
   else {
@@ -50,7 +50,7 @@ function commerce_braintree_log_data_view_form($form, $form_state, $id) {
   $form['value'] = array(
     '#type' => 'item',
     '#title' => t('Data'),
-    '#markup' => dpr($data, TRUE),
+    //'#markup' => dpr($data, TRUE),
   );
   return $form;
 }
