@@ -214,8 +214,7 @@ function commerce_braintree_subscription_status_callback_hook($kind, $user, $sid
  * Synchronization subscription from braintree server
  */
 function commerce_braintree_subscription_synchronization() {
-  $update = 0;
-  $delete = 0;
+  $update = $delete = 0;
   $rows = commmerce_braintree_subscription_get_all();
   foreach ($rows as $row) {
     $sub = commerce_braintree_subscription_get_by_id($row->sid);
@@ -258,13 +257,20 @@ function commerce_braintree_subscription_load_by_user($uid) {
   return isset($select) ? $select : FALSE;
 }
 
-
-
-function commerce_braintree_subscription_get_by_pid($pid) {
+/**
+ * Select subscription by list field with status difference 'Canceled'
+ * @param type $fields
+ * @return type
+ */
+function commerce_braintree_subscription_local_get($fields) {
+  $db_and = db_and();
+  foreach ($fields as $field => $value) {
+    $db_and->condition($field, $value);
+  }
+  $db_and->condition('status', 'Canceled', '<>');
   $select = db_select('commerce_braintree_subscription', 'c')
     ->fields('c')
-    ->condition('pid', $pid)
-    ->condition('status', 'Canceled', '<>')
+    ->condition($db_and)
     ->execute()
     ->fetchAssoc();
   return isset($select) ? $select : FALSE ;

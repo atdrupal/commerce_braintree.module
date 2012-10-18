@@ -24,7 +24,6 @@ define('COMMERCE_BRAINTREE_CREDITCARD_UPDATE','update credit card');
  * Implementation of hook_menu().
  */
 function commerce_braintree_menu() {
-  
   $items = array();
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
   
@@ -38,8 +37,7 @@ function commerce_braintree_menu() {
     'title' => 'Subscription',
     'page callback' => 'commerce_braintree_subscription_overview',
     'page arguments' => array(1),
-    'access callback' => 'commerce_braintree_customer_acess',
-    'access arguments' => array(1),
+    'access arguments' => array('view own subscription'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
@@ -50,7 +48,7 @@ function commerce_braintree_menu() {
     'title' => 'Credit card edit',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('commerce_braintree_creditcard_edit_form', 3),
-    //'access callback' => 'commerce_braintree_creditcard_edit_acess',
+    'access callback' => 'commerce_braintree_creditcard_edit_acess',
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
     'file' => 'commerce_braintree.form.inc',
@@ -74,14 +72,15 @@ function commerce_braintree_menu() {
     'file' => 'commerce_braintree.form.inc',
   );
   
-  if (!isset($payment['settings']['webhook_link']))  return $items;
-  $items[$payment['settings']['webhook_link']] = array(
-    'title' => 'Trigger occurs form braintree',
-    'page callback' => 'commerce_braintree_hooks',
-    'access arguments' => array('access content'), 
-    'type' => MENU_CALLBACK,
-    'file' => 'commerce_braintree.admin.inc',
-  );
+  if (isset($payment['settings']['webhook_link'])){
+    $items[$payment['settings']['webhook_link']] = array(
+      'title' => 'Trigger occurs form braintree',
+      'page callback' => 'commerce_braintree_hooks',
+      'access arguments' => array('access content'), 
+      'type' => MENU_CALLBACK,
+      'file' => 'commerce_braintree.admin.inc',
+    );
+  }
   return $items;
 }
 
@@ -90,6 +89,10 @@ function commerce_braintree_menu() {
  */
 function commerce_braintree_permission() {
   return array(
+    'view own subscription' => array(
+      'title' => t('View own subscription'), 
+      'description' => t('View own subscription.'),
+    ),
     'cancel any user' => array(
       'title' => t('Cancel any user'), 
       'description' => t('Perform cancel any user.'),
@@ -97,6 +100,18 @@ function commerce_braintree_permission() {
     'cancel own user' => array(
       'title' => t('Cancel own user'), 
       'description' => t('Perform cancel own user.'),
+    ),
+    'edit any credit card' => array(
+      'title' => t('Edit any credit card'), 
+      'description' => t('Perform edit any credit card.'),
+    ),
+    'edit own credit card' => array(
+      'title' => t('Edit own credit card'), 
+      'description' => t('Perform edit own credit card.'),
+    ),
+    'edit any credit card' => array(
+      'title' => t('Edit any credit card'), 
+      'description' => t('Perform edit any credit card.'),
     ),
   );
 }
@@ -108,17 +123,23 @@ function commerce_braintree_permission() {
  * @return boolean
  */
 function commerce_braintree_subscription_cancel_access($pid) {
-  $sub = commerce_braintree_subscription_get_by_pid($pid);
-  if ($sub == FALSE) {
-    return FALSE;
+  $sub = commerce_braintree_subscription_local_get(array('pid' => $pid));
+  if ($sub !== FALSE) {
+    $condition = $GLOBALS['user']->uid == $sub['uid'];
+    $condition = $condition && user_access('cancel own user');
+    $condition = $condition || user_access('cancel any user');
   }
-  if (user_access('cancel any user')) {
-    return TRUE;
+  return !$sub ? FALSE : $condition;
+}
+
+function commerce_braintree_creditcard_edit_acess($token) {
+  $sub = commerce_braintree_subscription_local_get(array('token' => $token));
+  if ($sub !== FALSE) {
+    $condition = $GLOBALS['user']->uid == $sub['uid'];
+    $condition = $condition && user_access('edit own credit card');
+    $condition = $condition || user_access('edit any credit card');
   }
-  if ($GLOBALS['user']->uid == $sub['uid'] && user_access('cancel own user')) {
-    return TRUE;
-  }
-  return FALSE;
+  return !$sub ? $condition : FALSE;
 }
 
 /**
@@ -189,7 +210,6 @@ function commerce_braintree_settings_form($settings = NULL) {
     '#default_value' => $settings['private_key'],
     '#required' => TRUE,
   );
-
   $form['card_types'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Limit accepted credit cards to the following types'),
@@ -202,7 +222,7 @@ function commerce_braintree_settings_form($settings = NULL) {
     '#title' => t('Webhook link'),
     '#description' => t('Link is destination of braintree webhook. Ex braintree/webhook'),
     '#default_value' => isset($settings['webhook_link']) ? $settings['webhook_link'] : '',
-    //'#required' => TRUE,
+    '#required' => TRUE,
   );
   return $form;
 }

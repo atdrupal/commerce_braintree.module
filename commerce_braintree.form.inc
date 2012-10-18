@@ -76,7 +76,6 @@ function commerce_braintree_creditcard_edit_form($form, &$form_state, $token) {
     '#default_value' => isset($billing_address->countryName) ? $billing_address->countryName : '',
   );
   
-  
   // Prepare the fields to include on the credit card form.
   $fields = array(
     'code' => '',
@@ -96,7 +95,6 @@ function commerce_braintree_creditcard_edit_form($form, &$form_state, $token) {
   );
 
   $form['payment_method'] += commerce_payment_credit_card_form($fields, $defaults);
-  
   
   $form['submit'] = array(
     '#type' => 'submit',
@@ -130,7 +128,6 @@ function commerce_braintree_creditcard_edit_form_validate($form, &$form_state) {
  */
 function commerce_braintree_creditcard_edit_form_submit($form, &$form_state) {
   $token  = $form_state['values']['ca_token'];
-  //dsm($form_state); dsm($token); return;
   //billing address
   $billing_address['firstName']       = $form_state['values']['ad_first_name'];
   $billing_address['lastName']        = $form_state['values']['ad_last_name'];
@@ -179,11 +176,8 @@ function commerce_braintree_form_upgrade() {
  * @return type
  */
 function commerce_braintree_subscription_cancel_form($form, &$form_state, $pid) {
-  
-  $sub =  commerce_braintree_subscription_get_by_pid($pid);
-  
+  $sub = commerce_braintree_subscription_local_get(array('pid' => $pid));
   $form['sid'] = array('#type' => 'value', '#value' => $sub['sid']);
-  
   $profile = profile2_load($pid);
   $output = confirm_form($form,
     t('Are you sure you want to cancel the subscription %pid?', array('%pid' => $profile->label)),
