@@ -15,8 +15,8 @@ include_once DRUPAL_ROOT . "/sites/all/libraries/braintree/lib/Braintree.php";
  * @return boolean
  */
 function commerce_braintree_hooks() {
-  commerce_braintree_initialize_library();
   $bt_challenge = "";
+  commerce_braintree_initialize_library();
   if (isset($_GET['bt_challenge'])) {
     $bt_challenge = $_GET['bt_challenge'];
   }
@@ -70,7 +70,11 @@ function commerce_braintree_callback_hook($kind, $user, $sid) {
   }
 }
 
-
+/**
+ * Write webhook to log
+ * @param type $kind
+ * @param type $sid
+ */
 function commerce_braintree_webhook_log($kind, $sid) {
   $log = new stdClass();
   $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
@@ -78,29 +82,6 @@ function commerce_braintree_webhook_log($kind, $sid) {
   commerce_braintree_log_save($log);
 }
 
-
-
-
-/**
- * View status subscription on order
- * @param type $order
- * @return type
- */
-function commerce_braintree_subscription_view($order) {
-  $plan_id  = commerce_braintree_planid_get($order);
-  $sub      = commerce_braintree_subscription_get_by_cid_planid($order->uid, $plan_id);
-  $op       = commerce_braintree_product_get_by_order($order);
-  $header   = array('Title', 'Price', 'Status', 'Operation');
-  $price    = commerce_currency_format($op->commerce_price['und']['0']['amount'], $op->commerce_price['und']['0']['currency_code']);
-  $status   = "Not found";
-  if ($sub) {
-    $status = $sub->status;
-  }
-  $rows[] = array($op->title, $price, $status, l(t("cancel"), "braintree/{$plan_id}/uid/{$order->uid}/cancel"));
-  $output = theme('table', array('header' => $header,
-                                 'rows'   => $rows ));
-  return $output;
-}
 /**
  * View status subscription on order
  * @param type $order

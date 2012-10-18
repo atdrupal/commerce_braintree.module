@@ -511,35 +511,7 @@ function commerce_braintree_customer_create($customer, &$message = "") {
   return ($customer->success) ? $customer : FALSE; 
 }
 
-/**
- * Update customer information
- * @param type $cid
- * @param array $info
- * @param type $message
- * @return boolean
- */
-function commerce_braintree_customer_update($cid, array $info, &$message) {
-  //Initializes the Braintree Library
-  $load = commerce_braintree_initialize_library();
-  if ($load == FALSE) {    
-    return FALSE;  
-  }
-  $action = 'Update customer';
-  $nid = commerce_braintree_product_id(0);
-  //update customer
-  $customer = Braintree_Customer::update($cid, $info);
-  if ($customer->success) {
-    $message = 'update successfull';
-    commerce_braintree_log_write(0, 0, $nid, $action, $message);
-    return $customer;
-  } 
-  
-  foreach ($customer->errors->deepAll() AS $error) {
-      $message .= $error->code . ": " . $error->message . "\n";
-  }
-  commerce_braintree_log_write(0, 0, $nid, $action, $message);
-  return FALSE;
-}
+
 
 /**
  * Get customer by id
@@ -560,39 +532,6 @@ function commerce_braintree_customer_get($cid) {
   }
   return $customer;
 }
-
-function commerce_braintree_token_get_by_creditcard($card_number, $cid) {
-  //Initializes the Braintree Library
-  $load = commerce_braintree_initialize_library();
-  if ($load == FALSE) {    
-    return FALSE;  
-  }
-  $bin = substr($card_number, 0, 6);
-  $last4 = substr($card_number, strlen($card_number)-4, strlen($card_number)-1);
-  try {
-    $collection1 = Braintree_Customer::search(array(
-      Braintree_CustomerSearch::creditCardNumber()->startsWith($bin)
-    ));
-    $collection2 = Braintree_Customer::search(array(
-      Braintree_CustomerSearch::creditCardNumber()->endsWith($last4)
-    ));
-    $customers = array_intersect($collection1->_ids, $collection2->_ids);
-    if (!in_array($cid, $customers)) {
-      return FALSE;
-    }
-    $customer = commerce_braintree_customer_get($cid);
-    foreach ($customer->creditCards as $credit_cards) {
-      if ($credit_cards->bin == $bin && $credit_cards->last4 == $last4) {
-        return $credit_cards->token;
-      }
-    }
-  } catch (Exception $e) {
-    //we have a not found exception!
-    $customers = FALSE;
-  }
-  return FALSE;
-}
-
 
 
 /**
@@ -726,36 +665,6 @@ function commerce_braintree_subscription_get_by_cid($cid) {
   return empty($resluts) ? FALSE : $resluts;
 }
 
-/**
- * Get subscription by plan id and customer id
- * @param type $cid
- * @param type $planid
- * @return boolean
- */
-function commerce_braintree_subscription_get_by_cid_planid($cid, $planid) {
-  //Initializes the Braintree Library
-//  $load = commerce_braintree_initialize_library();
-//  if ($load == FALSE) {    
-//    return FALSE;  
-//  }
-//  $customer = commerce_braintree_customer_get($cid);
-//  foreach ($customer->creditCards as $credit_card) {
-//    $subscriptions = $credit_card->subscriptions;
-//    foreach ($subscriptions as $subscription) {
-//      if ($subscription->planId == $planid) {
-//        return $subscription;
-//      }
-//    }
-//  }
-//  if (!isset($customer->creditCards[0]->subscriptions)) return FALSE;
-//  $subscriptions = $customer->creditCards[0]->subscriptions;
-//  foreach ($subscriptions as $subscription) {
-//    if ($subscription->planId == $planid) {
-//      return $subscription;
-//    }
-//  }
-  return FALSE;
-}
 
 /**
  * Get subscription by ID
@@ -783,15 +692,14 @@ function commerce_braintree_subscription_get_by_id($sid) {
  */
 function commerce_braintree_plan_check($plan_id) {
   //Initializes the Braintree Library
-  $load = commerce_braintree_initialize_library();
-  if ($load == FALSE) {    
-    return FALSE;  
-  }
+  commerce_braintree_initialize_library();
   //get list plan
   try {
     $plans = Braintree_Plan::all();
     foreach ($plans as $plan) {
-      if ($plan->id == $plan_id)      return TRUE;
+      if ($plan->id == $plan_id) {
+        return TRUE;
+      }
     }
   } catch (Exception $e) {
     //we have a not found exception!
@@ -807,10 +715,7 @@ function commerce_braintree_plan_check($plan_id) {
  */
 function commerce_braintree_creditcard_get_by_token($token) {
   //Initializes the Braintree Library
-  $load = commerce_braintree_initialize_library();
-  if ($load == FALSE) {    
-    return FALSE;  
-  }
+  commerce_braintree_initialize_library();
   try {
    $creditCard = Braintree_CreditCard::find($token);
   } catch (Exception $e) {
@@ -834,10 +739,6 @@ function commerce_braintree_planid_get($order) {
   return $plan_id;
 }
 
-function commerce_braintree_planid_get_by_sid($sid) {
-  $sub = commerce_braintree_subscription_get_by_id($sid);
-  return $sub ? $sub->planId : FALSE;
-}
 
 /**
  * Get product by order
@@ -852,26 +753,7 @@ function commerce_braintree_product_get_by_order($order) {
   return $op;
 }
 
-/**
- * Get product ID in Order by User id 
- * @global type $user
- * @param type $uid
- * @return int
- */
-function commerce_braintree_product_id($uid) {
-  if ($uid == 0) {
-    $uid = $GLOBALS['user']->uid;
-  }
-  $order = commerce_cart_order_load($uid);
-  if (empty($order->commerce_line_items)) {
-    return 0;
-  }
-  $line_item_id = $order->commerce_line_items['und']['0']['line_item_id'];
-  $line_item = commerce_line_item_load($line_item_id);
-  $pid = $line_item->commerce_product['und']['0']['product_id'];
-  $op = commerce_product_load($pid);
-  return $op->product_id;
-}
+
 
 /**
  * Implements hook_field_attach_validate()
