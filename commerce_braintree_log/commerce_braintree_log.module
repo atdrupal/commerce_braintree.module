@@ -25,7 +25,7 @@ function commerce_braintree_log_menu() {
     'file' => 'commerce_braintree_log.admin.inc',
     'type' => MENU_CALLBACK,
   );
-  //return $items;
+  return $items;
 }
 
 function commerce_braintree_log_permission() {

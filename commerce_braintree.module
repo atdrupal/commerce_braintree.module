@@ -423,7 +423,6 @@ function commerce_braintree_customer_info($order) {
  * @param type $message
  */
 function commerce_braintree_transaction($payment_method, $order, $charge, $status, $message, $set_message = TRUE) {
-  drupal_set_message($message, 'error');
   if ($status == COMMERCE_PAYMENT_STATUS_FAILURE && $set_message) {
     drupal_set_message($message, 'error');
   }
