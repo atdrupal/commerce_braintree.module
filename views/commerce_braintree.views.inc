@@ -51,9 +51,9 @@ function commerce_braintree_views_data() {
       'handler' => 'views_handler_argument_numeric',
     ),
   );
-  $data['commerce_braintree_log']['sid'] = array(
-    'title' => t('Braintree log sid'), 
-    'help' => t('The subscription id.'), 
+  $data['commerce_braintree_log']['data'] = array(
+    'title' => t('Braintree log data'), 
+    'help' => t('The subscription data.'), 
     'field' => array(
       'click sortable' => TRUE,
     ), 

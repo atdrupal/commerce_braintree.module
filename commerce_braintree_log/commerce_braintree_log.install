@@ -38,6 +38,13 @@ function commerce_braintree_log_schema() {
         //'not null' => TRUE,
         'size' => 'big',
       ),
+      'hostname' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Hostname of the user who triggered the event.',
+      ),
       'timestamp' => array(
         'description' => 'The Unix timestamp at which the read occurred.',
         'type' => 'int',

@@ -1,6 +1,29 @@
 <?php
 
 
+function commerce_braintree_log_menu() {
+  $items['admin/commerce/braintree/log/detail/%'] = array(
+    'title' => 'Details',
+    'page callback' => 'commerce_braintree_log_detail',
+    'page arguments' => array(5),
+    'access arguments' => array('access braintree log'),
+    'file' => 'commerce_braintree_log.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+function commerce_braintree_log_permission() {
+  return array(
+    'access braintree log' => array(
+      'title' => t('Access braintree log'), 
+      'description' => t('Views detail braintree log.'),
+    ),
+  );
+}
+
+
+
 
 /**
  * Implementation of hook_cb_send_data_braintree().
@@ -37,12 +60,13 @@ function commerce_braintree_log_cb_receive_data_braintree($data, $action, $messa
  * @param stdClass $log
  */
 function commerce_braintree_log_save(stdClass $log) {
-  $data = is_array($log->data) ? serialize($log->data) : $log->data;
+  //$data = is_array($log->data) ? serialize($log->data) : $log->data;
   $record = array();
   $record['uid'] = isset($log->uid) ? $log->uid : $GLOBALS['user']->uid;
   $record['action'] = isset($log->action) ? $log->action : 'default';
   $record['message'] = isset($log->message) ? $log->message : '';
-  $record['data'] = isset($data) ? $data : '';//serialize($log->data) : '';
+  $record['data'] = isset($log->data) ? serialize($log->data) : '';
+  $record['hostname'] = ip_address();
   $record['timestamp'] = REQUEST_TIME;
   drupal_write_record("commerce_braintree_log", $record);
 }

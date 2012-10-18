@@ -95,6 +95,22 @@ function commerce_braintree_subscription_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
+  $data['commerce_braintree_subscription']['token'] = array(
+    'title' => t('The credit card token'), 
+    'help' => t('The credit card token.'), 
+    'field' => array(
+      'click sortable' => TRUE,
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ), 
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+  );
   $data['commerce_braintree_subscription']['created'] = array(
     'title' => t('Create date'), 
     'help' => t('The date subscription was created.'), 
@@ -164,6 +180,13 @@ function commerce_braintree_subscription_views_data() {
       'title' => t('Link cancel'),
       'help' => t('Provide a simple link to cancel subscription.'),
       'handler' => 'commerce_braintree_subscription_handler_field_subscription_cancel_link',
+    ),
+  );
+  $data['commerce_braintree_subscription']['link_edit_credit_card'] = array(
+    'field' => array(
+      'title' => t('Link edit'),
+      'help' => t('Provide a simple link to edit credit card.'),
+      'handler' => 'commerce_braintree_subscription_handler_field_credit_card_edit_link',
     ),
   );
   
