@@ -50,7 +50,7 @@ function commerce_braintree_log_data_view_form($form, $form_state, $id) {
   $form['value'] = array(
     '#type' => 'item',
     '#title' => t('Data'),
-    //'#markup' => dpr($data, TRUE),
+    '#markup' => dpr($data, TRUE),
   );
   return $form;
 }
