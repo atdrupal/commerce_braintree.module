@@ -292,6 +292,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     $subscription = commerce_braintree_subscription_create($order->order_id, $token, $plan_id, $message);
     //save transaction and return
     $status = $subscription ? COMMERCE_PAYMENT_STATUS_SUCCESS : COMMERCE_PAYMENT_STATUS_FAILURE;
+    dsm('run 5');
     commerce_braintree_transaction($payment_method, $order, $charge, $status, $message, $subscription ? FALSE : TRUE);
     return $subscription ? TRUE : FALSE;
   }
