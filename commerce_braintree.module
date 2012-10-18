@@ -49,7 +49,7 @@ function commerce_braintree_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('commerce_braintree_creditcard_edit_form', 3),
     'access callback' => 'commerce_braintree_creditcard_edit_acess',
-    'access arguments' => array('access content'),
+    'access arguments' => array(3),
     'type' => MENU_CALLBACK,
     'file' => 'commerce_braintree.form.inc',
   );
@@ -139,7 +139,7 @@ function commerce_braintree_creditcard_edit_acess($token) {
     $condition = $condition && user_access('edit own credit card');
     $condition = $condition || user_access('edit any credit card');
   }
-  return !$sub ? $condition : FALSE;
+  return !$sub ? FALSE : $condition;
 }
 
 /**
@@ -264,69 +264,68 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  if (empty($payment_method['settings'])) {
-    drupal_set_message(t('This payment method must be configured by an administrator before it can be used.'), 'error');
-    return FALSE;
-  }
-  $message = "";
   $plan_id = commerce_braintree_planid_get($order);
-  if ($plan_id == FALSE) {
-    drupal_set_message(t('This product type unsupport braintree payment'), 'error');
+  $message = isset($payment_method['settings']) ? '' : 'This payment method must be configured by an administrator before it can be used.';
+  $support = !$plan_id ? 'This product type unsupport braintree payment' : '';
+  //Check payment method configured or product type support braintree payment
+  if (isset($message) || isset($support)) {
+    drupal_set_message($message . $support , 'error');
     return FALSE;
   }
-  
   // If the charge amount is 0...
   if ($charge['amount'] == 0) {
-      $status = COMMERCE_PAYMENT_STATUS_FAILURE;
-      $message = t('Invalid @amount transaction not attempted.', 
-                                array('@amount' => commerce_currency_format($charge['amount'], 
-                                $charge['currency_code'])));
-      commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
-      drupal_set_message(t('We encountered an error processing your transaction. Please contact us to resolve the issue.'), 'error');
-      return FALSE;
-  }
-  //Get all subsription user in order
-  $subs = commerce_braintree_subscription_get_by_cid($order->uid);
-  //If not found. Create new
-  if ($subs == FALSE) {
-    $token = commerce_braintree_submit_create_customer($payment_method, $pane_form, $pane_values, $order, $charge);
-    if ($token == FALSE) {
-      return FALSE;
-    }
-    $sub = commerce_braintree_subscription_create($order->order_id, $token, $plan_id, $message);
-    $status = $sub ? COMMERCE_PAYMENT_STATUS_SUCCESS : COMMERCE_PAYMENT_STATUS_FAILURE;
-    if ($sub == FALSE) {
-      drupal_set_message($message, 'error');
-    }
-    commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
-    //return FALSE;
-    return;
-  }
-
-  //Check duplicate
-  foreach ($subs as $sub) {
-    if ($plan_id == $sub->planId) {
-      $status   = COMMERCE_PAYMENT_STATUS_FAILURE;
-      $message  = check_plain("Current user logged is subscripting to {$plan_id}");
-      commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
-      drupal_set_message($message, 'error');
-      return FALSE;
-    }
-  }
-  //Create new subscription if it don't duplicate
-  $token = commerce_braintree_submit_create_customer($payment_method, $pane_form, $pane_values, $order, $charge);
-  if ($token == FALSE) {
+    $status = COMMERCE_PAYMENT_STATUS_FAILURE;
+    $message = t('Invalid @amount transaction not attempted.', 
+                              array('@amount' => commerce_currency_format($charge['amount'], 
+                              $charge['currency_code'])));
+    commerce_braintree_transaction($payment_method, $order, $charge, $status, $message, FALSE);
+    drupal_set_message(t('We encountered an error processing your transaction. Please contact us to resolve the issue.'), 'error');
     return FALSE;
   }
-  $sub = commerce_braintree_subscription_create($order->order_id, $token, $plan_id, $message);
-  $status = !$sub ? COMMERCE_PAYMENT_STATUS_FAILURE : COMMERCE_PAYMENT_STATUS_SUCCESS;
-  if ($sub == FALSE) {
-    drupal_set_message($message, 'error');
+  //Get all subsription user in order
+  $subscriptions = commerce_braintree_subscription_get_by_cid($order->uid);
+  
+  if (commerce_braintree_subcription_check_duplicate($subscriptions, $plan_id)) {
+    //create customer and credit card
+    $token = commerce_braintree_submit_create_customer($payment_method, $pane_form, $pane_values, $order, $charge);
+    //create subscription
+    $subscription = commerce_braintree_subscription_create($order->order_id, $token, $plan_id, $message);
+    //save transaction and return
+    $status = $subscription ? COMMERCE_PAYMENT_STATUS_SUCCESS : COMMERCE_PAYMENT_STATUS_FAILURE;
+    commerce_braintree_transaction($payment_method, $order, $charge, $status, $message, $subscription ? FALSE : TRUE);
+    return $subscription ? TRUE : FALSE;
   }
-  commerce_braintree_transaction($payment_method, $order, $charge, $status, $message);
-  return;
+  //Duplicate
+  commerce_braintree_transaction($payment_method, $order, $charge, $status, check_plain("User is subscripting to {$plan_id}"));
+  return FALSE;
 }
 
+/**
+ * Check duplicate
+ * @param type $subscriptions
+ * @param type $plan_id
+ * @return boolean
+ */
+function commerce_braintree_subcription_check_duplicate($subscriptions, $plan_id) {
+  if ($subscriptions !== FALSE) {
+    foreach ($subscriptions as $subscription) {
+      if ($plan_id == $subscription->planId) {
+        return FALSE;
+      }
+    }
+  }
+  return TRUE;
+}
+
+/**
+ * Create customer and credit card
+ * @param type $payment_method
+ * @param type $pane_form
+ * @param type $pane_values
+ * @param type $order
+ * @param type $charge
+ * @return boolean
+ */
 function commerce_braintree_submit_create_customer($payment_method, $pane_form, $pane_values, $order, $charge) {
   //create customer
   $customer = commerce_braintree_customer_get($order->uid);
@@ -335,7 +334,6 @@ function commerce_braintree_submit_create_customer($payment_method, $pane_form, 
     $customer = commerce_braintree_customer_create($customer_new, $message);
     if ($customer == FALSE) {
       commerce_braintree_transaction($payment_method, $order, $charge, COMMERCE_PAYMENT_STATUS_FAILURE, $message);
-      drupal_set_message($message, 'error');
       return FALSE;
     }
   }
@@ -423,7 +421,10 @@ function commerce_braintree_customer_info($order) {
  * @param type $status
  * @param type $message
  */
-function commerce_braintree_transaction($payment_method, $order, $charge, $status, $message) {
+function commerce_braintree_transaction($payment_method, $order, $charge, $status, $message, $set_message = TRUE) {
+  if ($status == COMMERCE_PAYMENT_STATUS_FAILURE && $set_message) {
+    drupal_set_message($message, 'error');
+  }
   $transaction = commerce_payment_transaction_new('braintree', $order->order_id);
   $transaction->instance_id = $payment_method['instance_id'];
   $transaction->amount = $charge['amount'];
@@ -457,7 +458,11 @@ function commerce_braintree_initialize_library() {
   return TRUE;
 }
 
-
+/**
+ * Create new credit card on braintree server
+ * @param type $credit_card
+ * @return type
+ */
 function commerce_braintree_credit_card_create($credit_card) {
   commerce_braintree_initialize_library();
   module_invoke_all('cb_send_data_braintree', commerce_braintree_creditcard_mask($credit_card), COMMERCE_BRAINTREE_CREDITCARD_CREATE, '');
@@ -469,6 +474,12 @@ function commerce_braintree_credit_card_create($credit_card) {
   return ($result->success) ? $result : FALSE;
 }
 
+/**
+ * Update credit card by token
+ * @param type $credit_card
+ * @param type $token
+ * @return type
+ */
 function commerce_braintree_credit_card_update($credit_card, $token) {
   commerce_braintree_initialize_library();
   module_invoke_all('cb_send_data_braintree', commerce_braintree_creditcard_mask($credit_card), COMMERCE_BRAINTREE_CREDITCARD_UPDATE, '');
@@ -480,6 +491,11 @@ function commerce_braintree_credit_card_update($credit_card, $token) {
   return ($result->success) ? $result : FALSE;
 }
 
+/**
+ * Get error form braintree libraries Exception
+ * @param type $result
+ * @return string
+ */
 function commerce_braintree_get_errors($result) {
   $message = '';
   foreach ($result->errors->deepAll() AS $error) {
@@ -487,6 +503,7 @@ function commerce_braintree_get_errors($result) {
   }
   return $message;
 }
+
 /**
  * Create new customer
  * @param type $customer
@@ -511,8 +528,6 @@ function commerce_braintree_customer_create($customer, &$message = "") {
   return ($customer->success) ? $customer : FALSE; 
 }
 
-
-
 /**
  * Get customer by id
  * @param type $cid
@@ -532,7 +547,6 @@ function commerce_braintree_customer_get($cid) {
   }
   return $customer;
 }
-
 
 /**
  * Get customer by token
@@ -572,30 +586,6 @@ function commerce_braintree_customer_get_all() {
 }
 
 /**
- * Delete customer by id
- * @param type $cid
- * @return type 
- */
-function commerce_braintree_customer_delete($cid) {
-  //Initializes the Braintree Library
-  //delete customer by id
-  $result = Braintree_Customer::delete($cid);
-  return $result;
-}
-
-/**
- * 
- * @return type
- */
-function commerce_braintree_customer_delete_all() {
-  //Initializes the Braintree Library
-  $customers = commerce_braintree_customer_get_all();
-  foreach ($customers->_ids as $cid) {
-    commerce_braintree_customer_delete($cid);
-  }
-}
-
-/**
  * Apply customer to plan by token and plan ID
  * @param type $order_id
  * @param type $token
@@ -604,6 +594,9 @@ function commerce_braintree_customer_delete_all() {
  * @return boolean
  */
 function commerce_braintree_subscription_create($order_id, $token, $plan_id, &$message = "") {
+  if ($token == FALSE) {
+    return FALSE;
+  }
   //Initializes the Braintree Library
   $subscription = array(
     'paymentMethodToken' => $token,
@@ -637,7 +630,8 @@ function commerce_braintree_subscription_cancel($subscription_id, &$message = ""
     $result = Braintree_Subscription::cancel($subscription_id);
     $message = $result->success ? "Subscription {$subscription_id} was canceled!" : commerce_braintree_get_errors($result);
     module_invoke_all('cb_receive_data_braintree', $result, $action, $message);
-  } catch (Exception $e) {
+  } 
+  catch (Exception $e) {
     $message = $e->getMessage();
     return FALSE;
   }
@@ -664,7 +658,6 @@ function commerce_braintree_subscription_get_by_cid($cid) {
   }
   return empty($resluts) ? FALSE : $resluts;
 }
-
 
 /**
  * Get subscription by ID
@@ -739,7 +732,6 @@ function commerce_braintree_planid_get($order) {
   return $plan_id;
 }
 
-
 /**
  * Get product by order
  * @param type $order
@@ -752,8 +744,6 @@ function commerce_braintree_product_get_by_order($order) {
   $op = commerce_product_load($pid);
   return $op;
 }
-
-
 
 /**
  * Implements hook_field_attach_validate()
@@ -774,45 +764,6 @@ function commerce_braintree_field_attach_validate($entity_type, $entity, &$error
 }
 
 /**
- * Get transaction status base subscription status
- * @param type $sub_status
- * @return string
- */
-function commerce_braintree_transaction_status($sub_status) {
-  switch ($sub_status) {
-    case 'Active':
-      return COMMERCE_PAYMENT_STATUS_SUCCESS;
-    case 'Canceled':
-      break;
-    case 'Expired':
-      break;
-    case 'Past Due':
-      break;
-    case 'Pending':
-      return COMMERCE_PAYMENT_STATUS_SUCCESS;
-  }
-}
-
-/**
- * Get orders by uid
- * @param type $uid
- * @return boolean
- */
-function commerce_braintree_get_orders_by_uid($uid) {
-  $select = db_select('commerce_order', 'c')
-            ->fields('c', array('order_id', 'uid'))
-            ->condition('uid', $uid)
-            ->execute();
-  if (!$select ) {
-    return FALSE;
-  }
-  $orders = array();
-  foreach ( $select as $row ) {
-    $orders[] = $row->order_id;
-  }
-}
-
-/**
  * Load user by subscripton id
  * @param type $subscription_id
  * @return type
@@ -823,7 +774,11 @@ function commerce_braintree_user_load_by_sid($sid) {
   return user_load($cid);
 }
 
-
+/**
+ * Hidden credit card number and cvv
+ * @param type $credit_card
+ * @return type
+ */
 function commerce_braintree_creditcard_mask($credit_card) {
   $card_number = $credit_card['number'];
   $bin = substr($card_number, 0, 6);
@@ -834,6 +789,12 @@ function commerce_braintree_creditcard_mask($credit_card) {
   $credit_card['cvv'] = commerce_braintreee_string_to_star($credit_card['cvv']);
   return $credit_card;
 }
+
+/**
+ * Convert string to *
+ * @param type $str
+ * @return string
+ */
 function commerce_braintreee_string_to_star($str) {
   $str = strlen($str); 
 	$number = 0;

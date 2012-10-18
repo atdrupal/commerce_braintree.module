@@ -102,6 +102,7 @@ function commerce_braintree_subscription_overview($user) {
     }
     $status = $sub->status;
     $proifle = profile2_load($row->pid);
+    $proifle_type =  profile2_get_types($proifle->type);
     $price_display = commerce_currency_format($product->commerce_price[LANGUAGE_NONE]['0']['amount'], $product->commerce_price[LANGUAGE_NONE]['0']['currency_code'], $product);
     
     $first_billing_date = $sub->firstBillingDate->format('m/d/Y');
@@ -111,7 +112,7 @@ function commerce_braintree_subscription_overview($user) {
     $paid_through_date = $sub->paidThroughDate->format('m/d/Y');
     $next_bill_amount = (strcmp($sub->status, 'Canceled') != 0) ? $sub->nextBillAmount : '-';
     
-    $rows[] = array($proifle->label, 
+    $rows[] = array($proifle_type->label, 
                 $price_display,
                 $first_billing_date,
                 $billing_period_start_date . ' - ' . $billing_period_end_date,
