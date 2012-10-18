@@ -264,14 +264,17 @@ function commerce_braintree_submit_form_validate($payment_method, $pane_form, $p
  * Payment method callback: checkout form submission.
  */
 function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pane_values, $order, $charge) {
-  $plan_id = commerce_braintree_planid_get($order);
-  $message = isset($payment_method['settings']) ? '' : 'This payment method must be configured by an administrator before it can be used.';
-  $support = !$plan_id ? 'This product type unsupport braintree payment' : '';
+  dsm('run 1');
+  $plan_id = commerce_braintree_planid_get($order);dsm($plan_id);
+  $message = isset($payment_method['settings']) ? '' : t('This payment method must be configured by an administrator before it can be used.');
+  $support = !$plan_id ? t('This product type unsupport braintree payment') : '';
   //Check payment method configured or product type support braintree payment
-  if (isset($message) || isset($support)) {
+  if (!empty($message) || !empty($support)) {
     drupal_set_message($message . $support , 'error');
+    dsm('run if' . $message . $support );
     return FALSE;
   }
+  dsm('run 2');
   // If the charge amount is 0...
   if ($charge['amount'] == 0) {
     $status = COMMERCE_PAYMENT_STATUS_FAILURE;
@@ -296,7 +299,7 @@ function commerce_braintree_submit_form_submit($payment_method, $pane_form, $pan
     return $subscription ? TRUE : FALSE;
   }
   //Duplicate
-  commerce_braintree_transaction($payment_method, $order, $charge, $status, check_plain("User is subscripting to {$plan_id}"));
+  commerce_braintree_transaction($payment_method, $order, $charge, COMMERCE_PAYMENT_STATUS_FAILURE, check_plain("User is subscripting to {$plan_id}"));
   return FALSE;
 }
 
@@ -422,6 +425,7 @@ function commerce_braintree_customer_info($order) {
  * @param type $message
  */
 function commerce_braintree_transaction($payment_method, $order, $charge, $status, $message, $set_message = TRUE) {
+  drupal_set_message($message, 'error');
   if ($status == COMMERCE_PAYMENT_STATUS_FAILURE && $set_message) {
     drupal_set_message($message, 'error');
   }
