@@ -10,47 +10,60 @@
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function rules_braintree_cb_subscription_canceled($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_canceled', $user, $sid);
+  rules_braintree_invoke_event('rules_braintree_event_subscription_canceled', $user, $sid, FALSE);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function rules_braintree_cb_subscription_charged_successfully($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_charged_successfully', $user, $sid);
+  rules_braintree_invoke_event('rules_braintree_event_subscription_charged_successfully', $user, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function rules_braintree_cb_subscription_charged_unsuccessfully($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_charged_unsuccessfully', $user, $sid);
+  rules_braintree_invoke_event('rules_braintree_event_subscription_charged_unsuccessfully', $user, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_expired().
  */
 function rules_braintree_cb_subscription_expired($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_expired', $user, $sid);
+  rules_braintree_invoke_event('rules_braintree_event_subscription_expired', $user, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_trial_ended().
  */
 function rules_braintree_cb_subscription_trial_ended($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_trial_ended', $user, $sid);
+  rules_braintree_invoke_event('rules_braintree_event_subscription_trial_ended', $user, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_past_due().
  */
 function rules_braintree_cb_subscription_went_past_due($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_went_past_due', $user, $sid);
+  rules_braintree_invoke_event('rules_braintree_event_subscription_went_past_due', $user, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_active().
  */
 function rules_braintree_cb_subscription_went_active($user, $sid) {
-  rules_invoke_event('rules_braintree_event_subscription_went_active', $user, $sid);
+  rules_braintree_invoke_event('rules_braintree_event_subscription_went_active', $user, $sid);
+}
+
+/**
+ * Invoke rules event by name
+ * @param type $event_name
+ * @param type $user
+ * @param type $sid
+ */
+function rules_braintree_invoke_event($event_name, $user, $sid ,$cancel = TRUE) {
+  $sub = commerce_braintree_subscription_local_get(array('uid' => $user->uid, 'sid' => $sid), $cancel);
+  $profile = profile2_load($sub['pid']);
+  $order = commerce_order_load($sub['order_id']);
+  rules_invoke_event($event_name, $user, $profile->type, $profile->pid, $order);
 }

@@ -87,6 +87,12 @@ function commerce_braintree_subscription_cb_subscription_created($subscription, 
   commerce_braintree_subscription_save($sub);
 }
 
+/**
+ * Get profile id same planId
+ * @param type $uid
+ * @param type $sid
+ * @return type
+ */
 function commerce_braintree_subscription_profile_get($uid, $sid) {
   $sub = commerce_braintree_subscription_get_by_id($sid);
   $type = $sub->planId;
@@ -94,76 +100,6 @@ function commerce_braintree_subscription_profile_get($uid, $sid) {
   profile2_save($profile);
   $result = profile2_by_uid_load($uid, $type);
   return isset($result) ? $result->pid : NULL;
-}
-
-/**
- * Save subsciption to local table
- * @param type $subscription
- */
-function commerce_braintree_subscription_save(stdClass $subscription) {
-  $record = array();
-  $record['uid'] = isset($subscription->uid) ? $subscription->uid : $GLOBALS['user']->uid;
-  $record['sid'] = $subscription->sid;
-  $record['order_id'] = $subscription->order_id;
-  $record['pid'] = isset($subscription->pid) ? $subscription->pid : NULL;
-  $record['token'] = isset($subscription->token) ? $subscription->token : '';
-  $record['status'] = isset($subscription->status) ? $subscription->status : '';
-  $record['created'] = isset($subscription->created) ? $subscription->created : REQUEST_TIME;
-  $record['last_update'] = REQUEST_TIME;
-  $is_upadte = commerce_braintree_subscription_load($record['uid'], $record['sid']);
-  if ($is_upadte == FALSE) {
-    drupal_write_record("commerce_braintree_subscription", $record);
-  }
-  else {
-    drupal_write_record("commerce_braintree_subscription", $record, array('uid', 'sid'));
-  }
-}
-
-function commerce_braintree_subscription_load($uid, $sid) {
-  $result = db_query('SELECT * FROM {commerce_braintree_subscription} c WHERE c.uid = :uid and c.sid = :sid', array(':uid' => $uid, ':sid' => $sid))->fetchObject();
-  return isset($result) ? $result : FALSE;
-}
-
-
-
-/**
- * Update status of subscription to database
- * @param type $uid
- * @param type $sid
- * @param type $status
- * @throws Exception
- */
-function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
-  $subscription = commerce_braintree_subscription_load($uid, $sid);
-  $subscription->status = $status;
-  commerce_braintree_subscription_save($subscription);
-}
-function commmerce_braintree_subscription_status_get($uid, $sid) {
-  $subscription = commerce_braintree_subscription_load($uid, $sid);
-  return isset($subscription->status) ? $subscription->status : FALSE;
-}
-
-/**
- * Get all subscription
- * @return type
- */
-function commmerce_braintree_subscription_get_all() {
-  $result = db_select('commerce_braintree_subscription', 'c')
-    ->fields('c', array('sid', 'uid', 'status'))
-    ->execute()
-    ->fetchAll();
-  return isset($result) ? $result : FALSE;
-}
-/**
- * Delete subscription by uid and sid
- * @param type $uid
- * @param type $sid
- */
-function commerce_braintree_subscription_delete($uid, $sid) {
-  db_delete('commerce_braintree_subscription')
-  ->condition('uid', $uid)
-  ->condition('sid', $sid)
-  ->execute();
 }
 
 /**
@@ -206,10 +142,6 @@ function commerce_braintree_subscription_status_callback_hook($kind, $user, $sid
   }
 }
 
-
-
-
-
 /**
  * Synchronization subscription from braintree server
  */
@@ -245,6 +177,74 @@ function commerce_braintree_subscription_synchronization() {
 }
 
 /**
+ * Save subsciption to local table
+ * @param type $subscription
+ */
+function commerce_braintree_subscription_save(stdClass $subscription) {
+  $record = array();
+  $record['uid'] = isset($subscription->uid) ? $subscription->uid : $GLOBALS['user']->uid;
+  $record['sid'] = $subscription->sid;
+  $record['order_id'] = $subscription->order_id;
+  $record['pid'] = isset($subscription->pid) ? $subscription->pid : NULL;
+  $record['token'] = isset($subscription->token) ? $subscription->token : '';
+  $record['status'] = isset($subscription->status) ? $subscription->status : '';
+  $record['created'] = isset($subscription->created) ? $subscription->created : REQUEST_TIME;
+  $record['last_update'] = REQUEST_TIME;
+  $is_upadte = commerce_braintree_subscription_load($record['uid'], $record['sid']);
+  if ($is_upadte == FALSE) {
+    drupal_write_record("commerce_braintree_subscription", $record);
+  }
+  else {
+    drupal_write_record("commerce_braintree_subscription", $record, array('uid', 'sid'));
+  }
+}
+
+function commerce_braintree_subscription_load($uid, $sid) {
+  $result = db_query('SELECT * FROM {commerce_braintree_subscription} c WHERE c.uid = :uid and c.sid = :sid', array(':uid' => $uid, ':sid' => $sid))->fetchObject();
+  return isset($result) ? $result : FALSE;
+}
+
+/**
+ * Update status of subscription to database
+ * @param type $uid
+ * @param type $sid
+ * @param type $status
+ * @throws Exception
+ */
+function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
+  $subscription = commerce_braintree_subscription_load($uid, $sid);
+  $subscription->status = $status;
+  commerce_braintree_subscription_save($subscription);
+}
+function commmerce_braintree_subscription_status_get($uid, $sid) {
+  $subscription = commerce_braintree_subscription_load($uid, $sid);
+  return isset($subscription->status) ? $subscription->status : FALSE;
+}
+
+/**
+ * Get all subscription
+ * @return type
+ */
+function commmerce_braintree_subscription_get_all() {
+  $result = db_select('commerce_braintree_subscription', 'c')
+    ->fields('c', array('sid', 'uid', 'status'))
+    ->execute()
+    ->fetchAll();
+  return isset($result) ? $result : FALSE;
+}
+/**
+ * Delete subscription by uid and sid
+ * @param type $uid
+ * @param type $sid
+ */
+function commerce_braintree_subscription_delete($uid, $sid) {
+  db_delete('commerce_braintree_subscription')
+  ->condition('uid', $uid)
+  ->condition('sid', $sid)
+  ->execute();
+}
+
+/**
  * Get multi subscription by User ID
  * @param type $uid
  * @return boolean
@@ -262,12 +262,14 @@ function commerce_braintree_subscription_load_by_user($uid) {
  * @param type $fields
  * @return type
  */
-function commerce_braintree_subscription_local_get($fields) {
+function commerce_braintree_subscription_local_get($fields, $cancel = TRUE) {
   $db_and = db_and();
   foreach ($fields as $field => $value) {
     $db_and->condition($field, $value);
   }
-  $db_and->condition('status', 'Canceled', '<>');
+  if ($cancel) {
+    $db_and->condition('status', 'Canceled', '<>');
+  }
   $select = db_select('commerce_braintree_subscription', 'c')
     ->fields('c')
     ->condition($db_and)
@@ -275,3 +277,4 @@ function commerce_braintree_subscription_local_get($fields) {
     ->fetchAssoc();
   return isset($select) ? $select : FALSE ;
 }
+

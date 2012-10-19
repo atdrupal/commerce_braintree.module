@@ -7,7 +7,6 @@
 function commerce_braintree_log_detail($id) {
   module_load_include('inc', 'dblog', 'dblog.admin');
   $result = db_query('SELECT c.*, u.name, u.uid FROM {commerce_braintree_log} c INNER JOIN {users} u ON c.uid = u.uid WHERE c.id = :id', array(':id' => $id))->fetchObject();
-  
   if ($log = $result) {
     $rows = array(
       array(
@@ -44,7 +43,13 @@ function commerce_braintree_log_detail($id) {
   }
 }
 
-
+/**
+ * Views data
+ * @param type $form
+ * @param type $form_state
+ * @param type $id
+ * @return type
+ */
 function commerce_braintree_log_data_view_form($form, $form_state, $id) {
   $data = array_map('unserialize', db_query('SELECT id, data FROM {commerce_braintree_log} c WHERE c.id = :id', array(':id' => $id))->fetchAllKeyed());
   $form['value'] = array(

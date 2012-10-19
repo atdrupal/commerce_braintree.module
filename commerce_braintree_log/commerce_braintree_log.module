@@ -11,7 +11,6 @@ function commerce_braintree_log_views_api() {
   ); 
 }
 
-
 /**
  * Implementation of hook_menu().
  */
@@ -28,6 +27,10 @@ function commerce_braintree_log_menu() {
   return $items;
 }
 
+/**
+ * 
+ * Implementation of hook_permission().
+ */
 function commerce_braintree_log_permission() {
   return array(
     'access braintree log' => array(
@@ -48,7 +51,6 @@ function commerce_braintree_log_cb_send_data_braintree($data, $action, $message)
   commerce_braintree_log_save($log);
 }
 
-
 /**
  * Implementation of hook_cb_receive_data_braintree().
  */
@@ -60,13 +62,11 @@ function commerce_braintree_log_cb_receive_data_braintree($data, $action, $messa
   commerce_braintree_log_save($log);
 }
 
-
 /**
- * 
+ * Save log to database
  * @param stdClass $log
  */
 function commerce_braintree_log_save(stdClass $log) {
-  //$data = is_array($log->data) ? serialize($log->data) : $log->data;
   $record = array();
   $record['uid'] = isset($log->uid) ? $log->uid : $GLOBALS['user']->uid;
   $record['action'] = isset($log->action) ? $log->action : 'default';

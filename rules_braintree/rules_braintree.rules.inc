@@ -16,9 +16,17 @@ function rules_braintree_rules_event_info() {
       'type' => 'user',
       'label' => t('The user of webhook callback'),
     ),
-    'planid' => array(
+    'profile_type' => array(
       'type' => 'text',
-      'label' => t('Braintree plan id'),
+      'label' => t('Profiles type'),
+    ),
+    'profile_id' => array(
+      'type' => 'text',
+      'label' => t('Profiles Id'),
+    ),
+    'order' => array(
+      'type' => 'commerce_order',
+      'label' => t('The order for this subscription')
     ),
   );
   $events['rules_braintree_event_subscription_canceled'] = array(
@@ -68,18 +76,13 @@ function rules_braintree_rules_action_info() {
   $actions = array();
   if (module_exists('commerce_braintree')) {
     $actions['rules_braintree_action_profile_data_set'] = array(
-      'label' => t('Set profile data of user from webhook callback'),
+      'label' => t('Profile data set'),
       'group' => t('Braintree'),
       'parameter' => array(
-        'account' => array(
-          'type' => 'user',
-          'label' => t('The user of webhook callback'),
-        ),
-        'sid' => array(
+        'profile_id' => array(
           'type' => 'text',
-          'label' => t('Braintree subscription id'),
+          'label' => t('Profile Id'),
         ),
-        
         'fields' => array(
           'type' => 'text',
           'label' => t('Field and value'),
@@ -98,10 +101,10 @@ function rules_braintree_rules_action_info() {
  * @param type $sid
  * @param type $fields
  */
-function rules_braintree_action_profile_data_set($account, $sid, $fields) {
-  $profile = profile2_by_uid_load($account->uid, $sid);
+function rules_braintree_action_profile_data_set($pid, $fields) {
+  $profile = profile2_load($pid);
   $fields = explode("\n", str_replace("\r", '', $fields));
-  $instances = field_info_instances('profile2', $sid);
+  $instances = field_info_instances('profile2', $profile->type);
   foreach ($fields as $field) {
     $field = explode('|', $field);
     foreach ($instances as $key => $insf) {
