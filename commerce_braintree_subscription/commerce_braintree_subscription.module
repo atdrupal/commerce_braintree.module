@@ -146,13 +146,11 @@ function commerce_braintree_subscription_status_callback_hook($kind, $user, $sid
  * Synchronization subscription from braintree server
  */
 function commerce_braintree_subscription_synchronization() {
-  $update = $delete = 0;
+  $update = 0;
   $rows = commmerce_braintree_subscription_get_all();
   foreach ($rows as $row) {
     $sub = commerce_braintree_subscription_get_by_id($row->sid);
     if ($sub == FALSE) {
-      commerce_braintree_subscription_delete($row->uid, $row->sid);
-      ++$delete;
       continue;
     }
     if (strcmp($row->status, $sub->status) !=0) {
@@ -168,11 +166,11 @@ function commerce_braintree_subscription_synchronization() {
     }
   }
   
-  watchdog('braintree', 'The system synchronized transactions success. Total @update updated, Deleted @delete', array('@update' => $update, '@delete' => $delete), WATCHDOG_ERROR);
+  watchdog('braintree', 'The system synchronized transactions success. Total @update updated.', array('@update' => $update), WATCHDOG_ERROR);
   //log
   $log = new stdClass();
   $log->action = COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC;
-  $log->message = "The system synchronized transactions success. Total {$update} updated, Deleted {$delete}";
+  $log->message = "The system synchronized transactions success. Total {$update} updated.";
   commerce_braintree_log_save($log);
 }
 
