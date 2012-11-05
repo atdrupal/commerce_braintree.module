@@ -77,29 +77,17 @@ function commerce_braintree_subscription_cron() {
  * Implements of hook_cb_subscription_create().
  */
 function commerce_braintree_subscription_cb_subscription_created($subscription, $order_id) {
+  $order = commerce_order_load($order_id);
+  $profile = commerce_braintree_get_profile_from_order($order);
+
   $sub = new stdClass();
   $sub->uid = $GLOBALS['user']->uid;
   $sub->sid = $subscription->subscription->id;
-  $sub->pid = commerce_braintree_subscription_profile_get($sub->uid, $sub->sid);
+  $sub->pid = $profile->nid;
   $sub->order_id = $order_id;
   $sub->status = $subscription->subscription->status;
   $sub->token = $subscription->subscription->paymentMethodToken;
   commerce_braintree_subscription_save($sub);
-}
-
-/**
- * Get profile id same planId
- * @param type $uid
- * @param type $sid
- * @return type
- */
-function commerce_braintree_subscription_profile_get($uid, $sid) {
-  $sub = commerce_braintree_subscription_get_by_id($sid);
-  $type = $sub->planId;
-  $profile = profile2_by_uid_load($uid, $type);
-  profile2_save($profile);
-  $result = profile2_by_uid_load($uid, $type);
-  return isset($result) ? $result->pid : NULL;
 }
 
 /**
@@ -153,7 +141,7 @@ function commerce_braintree_subscription_synchronization() {
     if ($sub == FALSE) {
       continue;
     }
-    if (strcmp($row->status, $sub->status) !=0) {
+    if (strcmp($row->status, $sub->status) != 0) {
       commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
       $user = user_load($row->uid);
       commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
@@ -165,8 +153,10 @@ function commerce_braintree_subscription_synchronization() {
       ++$update;
     }
   }
-  
-  watchdog('braintree', 'The system synchronized transactions success. Total @update updated.', array('@update' => $update), WATCHDOG_ERROR);
+ 
+  if($update) {
+    watchdog('braintree', 'The system synchronized transactions success. Total @update updated.', array('@update' => $update), WATCHDOG_WARNING);
+  } 
   //log
   $log = new stdClass();
   $log->action = COMMERCE_BRAINTREE_SUBSCRIPTION_SYNC;
@@ -188,8 +178,8 @@ function commerce_braintree_subscription_save(stdClass $subscription) {
   $record['status'] = isset($subscription->status) ? $subscription->status : '';
   $record['created'] = isset($subscription->created) ? $subscription->created : REQUEST_TIME;
   $record['last_update'] = REQUEST_TIME;
-  $is_upadte = commerce_braintree_subscription_load($record['uid'], $record['sid']);
-  if ($is_upadte == FALSE) {
+  $is_update = commerce_braintree_subscription_load($record['uid'], $record['sid']);
+  if ($is_update == FALSE) {
     drupal_write_record("commerce_braintree_subscription", $record);
   }
   else {

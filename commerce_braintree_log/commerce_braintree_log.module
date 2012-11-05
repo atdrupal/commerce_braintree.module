@@ -46,7 +46,7 @@ function commerce_braintree_log_permission() {
 function commerce_braintree_log_cb_send_data_braintree($data, $action, $message) {
   $log = new stdClass();
   $log->data = $data;
-  $log->action = $action;
+  $log->action = "SEND: " . $action;
   $log->message = $message;
   commerce_braintree_log_save($log);
 }
@@ -57,7 +57,7 @@ function commerce_braintree_log_cb_send_data_braintree($data, $action, $message)
 function commerce_braintree_log_cb_receive_data_braintree($data, $action, $message) {
   $log = new stdClass();
   $log->data = $data;
-  $log->action = $action;
+  $log->action = "RECV: " . $action;
   $log->message = $message;
   commerce_braintree_log_save($log);
 }
