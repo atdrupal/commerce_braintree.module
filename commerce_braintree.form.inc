@@ -10,7 +10,6 @@
 function commerce_braintree_creditcard_edit_form($form, &$form_state, $sid) {
   module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
   $form_state['build_info']['files']['form'] = drupal_get_path('module', 'commerce_braintree') . '/commerce_braintree.form.inc';
-//  form_load_include($form_state, 'inc', 'commerce_braintree', 'commerce_braintree.form');
   $sub   = commerce_braintree_subscription_local_get(array('sid' => $sid), FALSE);
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
   $creditcard = commerce_braintree_creditcard_get_by_token($sub['token']);
@@ -51,14 +50,8 @@ function commerce_braintree_creditcard_edit_form($form, &$form_state, $sid) {
   );
   
   $profile = commerce_customer_profile_new('billing', $GLOBALS['user']->uid);
-//  field_attach_load('commerce_customer_profile', $profile);
-  
-//  $instance = field_info_instance('commerce_customer_profile', 'commerce_customer_address', 'billing');
-//  $field = field_info_field_by_id($instance['field_id']);
-// Ensure the owner name is accessible if the uid is set.
   
   // load oder
-//  $order = commerce_cart_order_load($user->uid);
   $order = commerce_order_load($sub['order_id']);
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
@@ -101,6 +94,7 @@ function commerce_braintree_creditcard_edit_form($form, &$form_state, $sid) {
   
   // Add the field related form elements.
   $form_state['customer_profile'] = $profile;
+  // Attach address field to form
   field_attach_form('commerce_customer_profile', $profile, $form, $form_state);
   $form['commerce_customer_address']['#weight'] = '0';
   $form['payment_method'] += commerce_payment_credit_card_form($fields, $defaults);
@@ -141,7 +135,7 @@ function commerce_braintree_creditcard_edit_form_validate(&$form, &$form_state) 
     form_set_error('credit_card][exp_' . $exp_valid, t('You have specified an expired credit card.'));
   }
   
-
+  // Add validate address field
   $profile = $form_state['customer_profile'];
   field_attach_form_validate('commerce_customer_profile', $profile, $form, $form_state);
   
@@ -154,7 +148,6 @@ function commerce_braintree_creditcard_edit_form_validate(&$form, &$form_state) 
  * @param type $form_state
  */
 function commerce_braintree_creditcard_edit_form_submit($form, &$form_state) {
-//  kpr($form);die;
   $sub = commerce_braintree_subscription_local_get(array('sid' => $form_state['values']['sid']), FALSE);
   $token  = $sub['token'];
   $commerce_customer_address = $form_state['values']['commerce_customer_address']['und'][0];
@@ -180,13 +173,11 @@ function commerce_braintree_creditcard_edit_form_submit($form, &$form_state) {
   $creditcard['billingAddress']['options'] = array('updateExisting' => TRUE);
   
   $card = commerce_braintree_credit_card_update($creditcard, $token);
-//  dsm($card);
   if ($card->success) {
     drupal_set_message(t('Updated Successfull.'));
     return;
   }
-  drupal_set_message(t('There are error. @errors', array('@errors' => $card->message)), 'error');
-  //commerce_braintree_get_errors($card)
+  drupal_set_message(t('There are error. @errors', array('@errors' => commerce_braintree_get_errors($card))), 'error');
 }
 
 /**

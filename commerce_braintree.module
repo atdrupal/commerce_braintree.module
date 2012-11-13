@@ -945,17 +945,3 @@ function commerce_braintreee_string_to_star($str) {
 	}
 	return $stars;
 }
-
-function commerce_braintree_form_alter(&$form, $form_state, $form_id) {
-//  dsm($form);//die;
-//  dsm($form_state);
-//  dsm($form_state['triggering_element']['#parents']);
-//  $form['customer_profile_billing']['commerce_customer_address']['und'][0]['#address']['country'] = 'US';
-}
-
-
-
-
-function commerce_braintree_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
-//  dsm($field);
-}
