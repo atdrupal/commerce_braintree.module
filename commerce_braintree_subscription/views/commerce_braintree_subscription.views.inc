@@ -125,6 +125,118 @@ function commerce_braintree_subscription_views_data() {
       'handler' => 'views_handler_filter_date',
     ),
   );
+  
+  
+  
+  
+  $data['commerce_braintree_subscription']['first_bill_date'] = array(
+    'title' => t('First Bill Date'), 
+    'help' => t('First Bill Date.'), 
+    'field' => array(
+      'handler' => 'views_handler_field_date', 
+      'click sortable' => TRUE,
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+  $data['commerce_braintree_subscription']['billing_period_start_date'] = array(
+    'title' => t('The billing period start date.'), 
+    'help' => t('The billing period start date.'), 
+    'field' => array(
+      'handler' => 'views_handler_field_date', 
+      'click sortable' => TRUE,
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+  $data['commerce_braintree_subscription']['billing_period_end_date'] = array(
+    'title' => t('The billing period end date.'), 
+    'help' => t('The billing period end date.'), 
+    'field' => array(
+      'handler' => 'views_handler_field_date', 
+      'click sortable' => TRUE,
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+  $data['commerce_braintree_subscription']['paid_through_date'] = array(
+    'title' => t('Paid Through Date.'), 
+    'help' => t('Paid Through Date.'), 
+    'field' => array(
+      'handler' => 'views_handler_field_date', 
+      'click sortable' => TRUE,
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+  $data['commerce_braintree_subscription']['next_bill_date'] = array(
+    'title' => t('Next Bill Date.'), 
+    'help' => t('Next Bill Date.'), 
+    'field' => array(
+      'handler' => 'views_handler_field_date', 
+      'click sortable' => TRUE,
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+  $data['commerce_braintree_subscription']['next_billing_period_amount'] = array(
+    'title' => t('Next Billing Period Amount.'), 
+    'help' => t('Next Billing Period Amount.'), 
+    'field' => array(
+      'click sortable' => TRUE,
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ), 
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
+  $data['commerce_braintree_subscription']['price'] = array(
+    'title' => t('The Subscription price.'), 
+    'help' => t('The Subscription price.'), 
+    'field' => array(
+      'click sortable' => TRUE,
+    ), 
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ), 
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ), 
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
+  
+  
+  
+  
+  
+  
   $data['commerce_braintree_subscription']['last_update'] = array(
     'title' => t('Last update'), 
     'help' => t('The date that subscription last update.'), 
@@ -164,15 +276,16 @@ function commerce_braintree_subscription_views_data() {
     ),
   );
   $data['commerce_braintree_subscription']['pid'] = array(
-    'title' => t('Profile relative'),
-    'help' => t('Profile relative.'),
+    'title' => t('Node'),
+    'help' => t('Node relative.'),
     'relationship' => array(
       'handler' => 'views_handler_relationship',
-      'base' => 'profile',
+      'base' => 'node',
       'field' => 'pid',
-      'label' => t('Profile id'),
+      'label' => t('Node'),
     ),
   );
+  
   
   // Expose links to cancel subscription.
   $data['commerce_braintree_subscription']['link_cancel_subscription'] = array(

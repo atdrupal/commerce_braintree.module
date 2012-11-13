@@ -16,49 +16,49 @@ function commerce_braintree_subscription_views_api() {
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function commerce_braintree_subscription_cb_subscription_canceled($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function commerce_braintree_subscription_cb_subscription_charged_successfully($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function commerce_braintree_subscription_cb_subscription_charged_unsuccessfully($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_expired().
  */
 function commerce_braintree_subscription_cb_subscription_expired($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_trial_ended().
  */
 function commerce_braintree_subscription_cb_subscription_trial_ended($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_past_due().
  */
 function commerce_braintree_subscription_cb_subscription_went_past_due($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_active().
  */
 function commerce_braintree_subscription_cb_subscription_went_active($user, $sid) {
-  commmerce_braintree_subscription_status_callback($user->uid, $sid);
+  commmerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
@@ -79,14 +79,39 @@ function commerce_braintree_subscription_cron() {
 function commerce_braintree_subscription_cb_subscription_created($subscription, $order_id) {
   $order = commerce_order_load($order_id);
   $profile = commerce_braintree_get_profile_from_order($order);
-
   $sub = new stdClass();
-  $sub->uid = $GLOBALS['user']->uid;
-  $sub->sid = $subscription->subscription->id;
+  $sub->uid = $sub->uid = $GLOBALS['user']->uid;
   $sub->pid = $profile->nid;
   $sub->order_id = $order_id;
-  $sub->status = $subscription->subscription->status;
-  $sub->token = $subscription->subscription->paymentMethodToken;
+  
+  $sub->sid = $subscription->id;
+  $sub->status = $subscription->status;
+  $sub->token = $subscription->paymentMethodToken;
+  $sub->plan_id = $subscription->planId;
+  $sub->price = $subscription->price;
+  $sub->first_bill_date = strtotime($subscription->firstBillingDate->format('m/d/Y'));
+  $sub->billing_period_start_date = strtotime($subscription->billingPeriodStartDate->format('m/d/Y'));
+  $sub->billing_period_end_date = strtotime($subscription->billingPeriodEndDate->format('m/d/Y'));
+  $sub->paid_through_date = strtotime($subscription->paidThroughDate->format('m/d/Y'));
+  $sub->next_bill_date = strtotime($subscription->nextBillingDate->format('m/d/Y'));
+  $sub->next_billing_period_amount = $subscription->nextBillingPeriodAmount;
+  commerce_braintree_subscription_save($sub);
+}
+
+
+function commerce_braintree_subscription_local_update($uid, $sid) {
+  
+  $subscription = commerce_braintree_subscription_get_by_id($sid);
+  $sub = commerce_braintree_subscription_load($uid, $sid);
+  $sub->status = $subscription->status;
+  $sub->plan_id = $subscription->planId;
+  $sub->price = $subscription->price;
+  $sub->first_bill_date = strtotime($subscription->firstBillingDate->format('m/d/Y'));
+  $sub->billing_period_start_date = strtotime($subscription->billingPeriodStartDate->format('m/d/Y'));
+  $sub->billing_period_end_date = strtotime($subscription->billingPeriodEndDate->format('m/d/Y'));
+  $sub->paid_through_date = strtotime($subscription->paidThroughDate->format('m/d/Y'));
+  $sub->next_bill_date = strtotime($subscription->nextBillingDate->format('m/d/Y'));
+  $sub->next_billing_period_amount = $subscription->nextBillingPeriodAmount;
   commerce_braintree_subscription_save($sub);
 }
 
@@ -95,17 +120,13 @@ function commerce_braintree_subscription_cb_subscription_created($subscription, 
  * @param type $uid
  * @param type $sid
  */
-function commmerce_braintree_subscription_status_callback($uid, $sid) {
-  $sub = commerce_braintree_subscription_get_by_id($sid);
-  $status_local = commmerce_braintree_subscription_status_get($uid, $sid);
-  if ($sub->status != $status_local) {
-    commmerce_braintree_subscription_status_update($uid, $sid, $sub->status);
-    $log = new stdClass();
-    $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
-    $log->message = "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}";
-    commerce_braintree_log_save($log);
-    return 1;
-  }
+function commmerce_braintree_subscription_status_change($uid, $sid) {
+  commmerce_braintree_subscription_local_update($uid, $sid);
+  $log = new stdClass();
+  $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
+  $log->message = "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}";
+  commerce_braintree_log_save($log);
+  return 1;
 }
 /**
  * When updated subscription, callback hook base subscription status to update our users
@@ -142,7 +163,7 @@ function commerce_braintree_subscription_synchronization() {
       continue;
     }
     if (strcmp($row->status, $sub->status) != 0) {
-      commmerce_braintree_subscription_status_update($row->uid, $row->sid, $sub->status);
+      commmerce_braintree_subscription_local_update($row->uid, $row->sid);
       $user = user_load($row->uid);
       commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
       //log
@@ -176,6 +197,17 @@ function commerce_braintree_subscription_save(stdClass $subscription) {
   $record['pid'] = isset($subscription->pid) ? $subscription->pid : NULL;
   $record['token'] = isset($subscription->token) ? $subscription->token : '';
   $record['status'] = isset($subscription->status) ? $subscription->status : '';
+  
+  $record['plan_id'] = $subscription->plan_id; 
+  
+  $record['price'] = $subscription->price;
+  $record['first_bill_date'] = $subscription->first_bill_date;
+  $record['billing_period_start_date'] = $subscription->billing_period_start_date;
+  $record['billing_period_end_date'] = $subscription->billing_period_end_date;
+  $record['paid_through_date'] = $subscription->paid_through_date;
+  $record['next_bill_date'] = $subscription->next_bill_date;
+  $record['next_billing_period_amount'] = $subscription->next_billing_period_amount;
+  
   $record['created'] = isset($subscription->created) ? $subscription->created : REQUEST_TIME;
   $record['last_update'] = REQUEST_TIME;
   $is_update = commerce_braintree_subscription_load($record['uid'], $record['sid']);
@@ -192,18 +224,7 @@ function commerce_braintree_subscription_load($uid, $sid) {
   return isset($result) ? $result : FALSE;
 }
 
-/**
- * Update status of subscription to database
- * @param type $uid
- * @param type $sid
- * @param type $status
- * @throws Exception
- */
-function commmerce_braintree_subscription_status_update($uid, $sid, $status) {
-  $subscription = commerce_braintree_subscription_load($uid, $sid);
-  $subscription->status = $status;
-  commerce_braintree_subscription_save($subscription);
-}
+
 function commmerce_braintree_subscription_status_get($uid, $sid) {
   $subscription = commerce_braintree_subscription_load($uid, $sid);
   return isset($subscription->status) ? $subscription->status : FALSE;

@@ -1,0 +1,62 @@
+<?php
+/**
+ * @file
+ */
+
+
+function subscription_informations_schema() {
+  $schema['commerce_braintree_subscription_informations'] = array(
+    'description' => 'The base table save subscription informations.', 
+    'fields' => array(
+      'sid' => array(
+        'description' => 'The Subscription id.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        'not null' => TRUE, 
+      ),
+      'plan_id' => array(
+        'description' => 'The plan id.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        //'not null' => TRUE, 
+      ), 
+      'price' => array(
+        'description' => 'The Subscription price.', 
+        'type' => 'float', 
+        //'not null' => TRUE, 
+      ),  
+      'first_bill_date' => array(
+        'description' => 'First Bill Date.', 
+        'mysql_type' => 'DATETIME', 
+        //'not null' => TRUE, 
+      ), 
+      'billing_period_start_date' => array(
+        'description' => 'The billing period start date.', 
+        'mysql_type' => 'DATETIME', 
+        //'not null' => TRUE, 
+      ), 
+      'billing_period_end_date' => array(
+        'description' => 'The billing period end date.', 
+        'mysql_type' => 'DATETIME', 
+        //'not null' => TRUE, 
+      ), 
+      'paid_through_date' => array(
+        'description' => 'Paid Through Date.', 
+        'mysql_type' => 'DATETIME', 
+        //'not null' => TRUE, 
+      ), 
+      'next_bill_date' => array(
+        'description' => 'Next Bill Date.', 
+        'mysql_type' => 'DATETIME', 
+        //'not null' => TRUE, 
+      ), 
+      'next_billing_period_amount' => array(
+        'description' => 'Next Billing Period Amount.', 
+        'type' => 'float', 
+        //'not null' => TRUE, 
+      ),  
+    ), 
+    'primary key' => array('sid'),
+  );
+  return $schema;
+}

@@ -1,0 +1,7 @@
+name = Braintree Informations
+description = BrainTree payment subscription informations
+dependencies[] = commerce_braintree
+package = "Viet Coop"
+
+core = 7.x
+version = 7.x-1.0-beta1

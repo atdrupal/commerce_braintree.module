@@ -63,7 +63,7 @@ function rules_braintree_cb_subscription_went_active($user, $sid) {
  */
 function rules_braintree_invoke_event($event_name, $user, $sid ,$cancel = TRUE) {
   $sub = commerce_braintree_subscription_local_get(array('uid' => $user->uid, 'sid' => $sid), $cancel);
-  $profile = profile2_load($sub['pid']);
   $order = commerce_order_load($sub['order_id']);
-  rules_invoke_event($event_name, $user, $profile->type, $profile->pid, $order);
+  $profile = commerce_braintree_get_profile_from_order($order);
+  rules_invoke_event($event_name, $user, $profile->nid, $order);
 }

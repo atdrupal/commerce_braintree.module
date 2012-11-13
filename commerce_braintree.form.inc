@@ -9,13 +9,12 @@
  */
 function commerce_braintree_creditcard_edit_form($form, &$form_state, $sid) {
   module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
-
-  $sub = commerce_braintree_subscription_local_get(array('sid' => $sid), FALSE);
-
+  $form_state['build_info']['files']['form'] = drupal_get_path('module', 'commerce_braintree') . '/commerce_braintree.form.inc';
+//  form_load_include($form_state, 'inc', 'commerce_braintree', 'commerce_braintree.form');
+  $sub   = commerce_braintree_subscription_local_get(array('sid' => $sid), FALSE);
   $payment = commerce_payment_method_instance_load('braintree|commerce_payment_braintree');
   $creditcard = commerce_braintree_creditcard_get_by_token($sub['token']);
-  $billing_address = $creditcard->billingAddress;
-  
+  $billing_address = isset($creditcard->billingAddress) ? $creditcard->billingAddress : null;
   $form['payment_method'] = array(
     '#type' => 'fieldset', 
     '#title' => t('Payment Method Details'),
@@ -31,57 +30,7 @@ function commerce_braintree_creditcard_edit_form($form, &$form_state, $sid) {
   //$form['payment_method']['ca_token'] =  array('#type' => 'value', '#value' => $token);
   $form['payment_method']['sid'] = array('#type' => 'value', '#value' => $sid);
   
-  $form['billing_address'] = array(
-    '#type' => 'fieldset', 
-    '#title' => t('Billing Address'),
-  );
-  
-  $form['billing_address']['ad_first_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('First name'),
-    '#default_value' => isset($billing_address->firstName) ? $billing_address->firstName :'' ,
-  );
-  $form['billing_address']['ad_last_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Last name'),
-    '#default_value' => isset($billing_address->lastName) ? $billing_address->lastName : '',
-  );
-  $form['billing_address']['ad_company'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Company'),
-    '#default_value' => isset($billing_address->company) ? $billing_address->company :'' ,
-  );
-  $form['billing_address']['ad_street_address'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Street Address'),
-    '#default_value' => isset($billing_address->streetAddress) ? $billing_address->streetAddress : '' ,
-  );
-  $form['billing_address']['ad_extended_address'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Extended Address'),
-    '#default_value' => isset($billing_address->extendedAddress) ? $billing_address->extendedAddress : '',
-  );
-  
-  $form['billing_address']['ad_city'] = array(
-    '#type' => 'textfield',
-    '#title' => t('City (Locality)'),
-    '#default_value' => isset($billing_address->locality) ? $billing_address->locality : '',
-  );
-  $form['billing_address']['ad_state'] = array(
-    '#type' => 'textfield',
-    '#title' => t('State/Province (Region)'),
-    '#default_value' => isset($billing_address->region) ? $billing_address->region : '',
-  );
-  $form['billing_address']['ad_postal_code'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Postal Code'),
-    '#default_value' => isset($billing_address->postalCode) ? $billing_address->postalCode : '',
-  );
-  $form['billing_address']['ad_country_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Country Name'),
-    '#default_value' => isset($billing_address->countryName) ? $billing_address->countryName : '',
-  );
+
   
   // Prepare the fields to include on the credit card form.
   $fields = array(
@@ -95,27 +44,86 @@ function commerce_braintree_creditcard_edit_form($form, &$form_state, $sid) {
   }
   
   $defaults = array(
-    'type' => $creditcard->cardType,
+    'type' => isset($creditcard->cardType) ? $creditcard->cardType : '',
     'number' => isset($creditcard->maskedNumber) ? $creditcard->maskedNumber : '', 
-    'exp_month' => $creditcard->expirationMonth, 
-    'exp_year' => $creditcard->expirationYear,
+    'exp_month' => isset($creditcard->expirationMonth) ? $creditcard->expirationMonth : '', 
+    'exp_year' => isset($creditcard->expirationYear) ? $creditcard->expirationYear : '',
   );
-
-  $form['payment_method'] += commerce_payment_credit_card_form($fields, $defaults);
   
+  $profile = commerce_customer_profile_new('billing', $GLOBALS['user']->uid);
+//  field_attach_load('commerce_customer_profile', $profile);
+  
+//  $instance = field_info_instance('commerce_customer_profile', 'commerce_customer_address', 'billing');
+//  $field = field_info_field_by_id($instance['field_id']);
+// Ensure the owner name is accessible if the uid is set.
+  
+  // load oder
+//  $order = commerce_cart_order_load($user->uid);
+  $order = commerce_order_load($sub['order_id']);
+  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+
+  // get profile id
+  $profile_id = $order_wrapper->commerce_customer_billing->profile_id->value();
+  
+  // load customer profile
+  $profile = commerce_customer_profile_load($profile_id);
+  
+  if (isset($profile->commerce_customer_address['und']['0']['first_name'])) {
+    $profile->commerce_customer_address['und']['0']['first_name'] = isset($billing_address->firstName) ? $billing_address->firstName :'' ;
+  }
+  if (isset($profile->commerce_customer_address['und']['0']['last_name'])) {
+    $profile->commerce_customer_address['und']['0']['last_name'] = isset($billing_address->lastName) ? $billing_address->lastName : '';
+  }
+  if (isset($profile->commerce_customer_address['und']['0']['organisation_name'])) {
+    //  //company
+    $profile->commerce_customer_address['und']['0']['organisation_name'] = isset($billing_address->company) ? $billing_address->company :'';
+  }
+  if (isset($profile->commerce_customer_address['und']['0']['administrative_area'])) {
+    //state
+    $profile->commerce_customer_address['und']['0']['administrative_area'] = isset($billing_address->region) ? $billing_address->region : '';
+  }
+  if (isset($profile->commerce_customer_address['und']['0']['premise'])) {
+    //address 2
+    $profile->commerce_customer_address['und']['0']['premise'] = isset($billing_address->extendedAddress) ? $billing_address->extendedAddress : '';
+  }
+  if (isset($profile->commerce_customer_address['und']['0']['locality'])) {
+    //city
+    $profile->commerce_customer_address['und']['0']['locality'] = isset($billing_address->locality) ? $billing_address->locality : '';
+  }
+  if (isset($profile->commerce_customer_address['und']['0']['postal_code'])) {
+    //postal code
+    $profile->commerce_customer_address['und']['0']['postal_code'] = isset($billing_address->postalCode) ? $billing_address->postalCode : '';
+  }
+  if (isset($profile->commerce_customer_address['und']['0']['thoroughfare'])) {
+    // address 1
+    $profile->commerce_customer_address['und']['0']['thoroughfare'] = isset($billing_address->streetAddress) ? $billing_address->streetAddress : '';
+  }
+  
+  // Add the field related form elements.
+  $form_state['customer_profile'] = $profile;
+  field_attach_form('commerce_customer_profile', $profile, $form, $form_state);
+  $form['commerce_customer_address']['#weight'] = '0';
+  $form['payment_method'] += commerce_payment_credit_card_form($fields, $defaults);
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save'),
   );
+  
+  
+  $form['#validate'][] = 'commerce_braintree_creditcard_edit_form_validate';
+  $form['#submit'][] = 'commerce_braintree_creditcard_edit_form_submit';
   return $form;
 }
+
 
 /**
  * Validate credit card
  * @param type $form
  * @param type $form_state
  */
-function commerce_braintree_creditcard_edit_form_validate($form, &$form_state) {
+function commerce_braintree_creditcard_edit_form_validate(&$form, &$form_state) {
+  module_load_include('inc', 'commerce_payment', 'includes/commerce_payment.credit_card');
   $sub = commerce_braintree_subscription_local_get(array('sid' => $form_state['values']['sid']), FALSE);
   // Double check to make sure there's no funny business going on. Shouldn't happen...
   // but doesn't hurt to double check.
@@ -128,11 +136,17 @@ function commerce_braintree_creditcard_edit_form_validate($form, &$form_state) {
   }
   // Ensure the expiration date is not being updated to a past date.
   $exp_valid = commerce_payment_validate_credit_card_exp_date($form_state['values']['credit_card']['exp_month'], $form_state['values']['credit_card']['exp_year']);
-
+  
   if ($exp_valid !== TRUE) {
     form_set_error('credit_card][exp_' . $exp_valid, t('You have specified an expired credit card.'));
   }
+  
+
+  $profile = $form_state['customer_profile'];
+  field_attach_form_validate('commerce_customer_profile', $profile, $form, $form_state);
+  
 }
+
 
 /**
  * Form edit credit card submit
@@ -140,18 +154,20 @@ function commerce_braintree_creditcard_edit_form_validate($form, &$form_state) {
  * @param type $form_state
  */
 function commerce_braintree_creditcard_edit_form_submit($form, &$form_state) {
+//  kpr($form);die;
   $sub = commerce_braintree_subscription_local_get(array('sid' => $form_state['values']['sid']), FALSE);
   $token  = $sub['token'];
+  $commerce_customer_address = $form_state['values']['commerce_customer_address']['und'][0];
   //billing address
-  $billing_address['firstName']       = $form_state['values']['ad_first_name'];
-  $billing_address['lastName']        = $form_state['values']['ad_last_name'];
-  $billing_address['company']         = $form_state['values']['ad_company'];
-  $billing_address['streetAddress']   = $form_state['values']['ad_street_address'];
-  $billing_address['extendedAddress'] = $form_state['values']['ad_extended_address'];
-  $billing_address['locality']        = $form_state['values']['ad_city'];
-  $billing_address['region']          = $form_state['values']['ad_state'];
-  $billing_address['postalCode']      = $form_state['values']['ad_postal_code'];
-  $billing_address['countryName']     = $form_state['values']['ad_country_name'];
+  $billing_address['firstName']       = isset($commerce_customer_address['first_name']) ? $commerce_customer_address['first_name'] : '';
+  $billing_address['lastName']        = isset($commerce_customer_address['last_name']) ? $commerce_customer_address['last_name'] : '';
+  $billing_address['company']         = isset($commerce_customer_address['organisation_name']) ? $commerce_customer_address['organisation_name'] : '';
+  $billing_address['streetAddress']   = isset($commerce_customer_address['thoroughfare']) ? $commerce_customer_address['thoroughfare'] : '';
+  $billing_address['extendedAddress'] = isset($commerce_customer_address['premise']) ? $commerce_customer_address['premise'] : '';
+  $billing_address['locality']        = isset($commerce_customer_address['locality']) ? $commerce_customer_address['locality'] : '';
+  $billing_address['region']          = isset($commerce_customer_address['administrative_area']) ? $commerce_customer_address['administrative_area'] : '';
+  $billing_address['postalCode']      = isset($commerce_customer_address['postal_code']) ? $commerce_customer_address['postal_code'] : '';
+  $billing_address['countryCodeAlpha2'] = isset($commerce_customer_address['country']) ? $commerce_customer_address['country'] : '';
   
   //creditcard
   $creditcard['cardholderName'] = $form_state['values']['ca_cardholder_name'];
@@ -163,7 +179,14 @@ function commerce_braintree_creditcard_edit_form_submit($form, &$form_state) {
   $creditcard['options']        = array('verifyCard' => TRUE);
   $creditcard['billingAddress']['options'] = array('updateExisting' => TRUE);
   
-  commerce_braintree_credit_card_update($creditcard, $token);
+  $card = commerce_braintree_credit_card_update($creditcard, $token);
+//  dsm($card);
+  if ($card->success) {
+    drupal_set_message(t('Updated Successfull.'));
+    return;
+  }
+  drupal_set_message(t('There are error. @errors', array('@errors' => $card->message)), 'error');
+  //commerce_braintree_get_errors($card)
 }
 
 /**

@@ -11,7 +11,8 @@ class commerce_braintree_subscription_handler_field_subscription_cancel_link ext
   function construct() {
     parent::construct();
 
-    $this->additional_fields['pid'] = 'pid';
+    $this->additional_fields['uid'] = 'uid';
+    $this->additional_fields['sid'] = 'sid';
   }
 
   function option_definition() {
@@ -39,8 +40,9 @@ class commerce_braintree_subscription_handler_field_subscription_cancel_link ext
 
   function render($values) {
     $text = !empty($this->options['text']) ? $this->options['text'] : t('cancel');
-    $pid = $this->get_value($values, 'pid');
+    $uid = $this->get_value($values, 'uid');
+    $sid = $this->get_value($values, 'sid');
 
-    return l($text, 'braintree/' . $pid . '/cancel');
+    return l($text, "user/{$uid}/subscription/" . $sid . '/cancel');
   }
 }

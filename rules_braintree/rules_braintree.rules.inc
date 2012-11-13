@@ -20,7 +20,7 @@ function rules_braintree_rules_event_info() {
       'type' => 'text',
       'label' => t('Profiles type'),
     ),
-    'profile_id' => array(
+    'profile_nid' => array(
       'type' => 'text',
       'label' => t('Profiles Id'),
     ),

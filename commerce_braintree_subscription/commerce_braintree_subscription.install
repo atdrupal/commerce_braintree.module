@@ -43,7 +43,48 @@ function commerce_braintree_subscription_schema() {
         'type' => 'varchar', 
         'length' => 255, 
         //'not null' => TRUE, 
+      ),
+      'plan_id' => array(
+        'description' => 'The plan id.', 
+        'type' => 'varchar', 
+        'length' => 255, 
+        //'not null' => TRUE, 
       ), 
+      'price' => array(
+        'description' => 'The Subscription price.', 
+        'type' => 'float', 
+        //'not null' => TRUE, 
+      ),  
+      'first_bill_date' => array(
+        'description' => 'First Bill Date.', 
+        'type' => 'int',
+        //'not null' => TRUE, 
+      ), 
+      'billing_period_start_date' => array(
+        'description' => 'The billing period start date.', 
+        'type' => 'int',
+        //'not null' => TRUE, 
+      ), 
+      'billing_period_end_date' => array(
+        'description' => 'The billing period end date.', 
+        'type' => 'int',
+        //'not null' => TRUE, 
+      ), 
+      'paid_through_date' => array(
+        'description' => 'Paid Through Date.', 
+        'type' => 'int', 
+        //'not null' => TRUE, 
+      ), 
+      'next_bill_date' => array(
+        'description' => 'Next Bill Date.', 
+        'type' => 'int',
+        //'not null' => TRUE, 
+      ), 
+      'next_billing_period_amount' => array(
+        'description' => 'Next Billing Period Amount.', 
+        'type' => 'float', 
+        //'not null' => TRUE, 
+      ),
       'created' => array(
         'description' => 'The Unix timestamp at create.',
         'type' => 'int',

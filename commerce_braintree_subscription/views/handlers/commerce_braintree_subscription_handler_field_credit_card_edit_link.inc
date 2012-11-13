@@ -11,7 +11,8 @@ class commerce_braintree_subscription_handler_field_credit_card_edit_link extend
   function construct() {
     parent::construct();
 
-    $this->additional_fields['token'] = 'token';
+    $this->additional_fields['uid'] = 'uid';
+    $this->additional_fields['sid'] = 'sid';
   }
 
   function option_definition() {
@@ -39,8 +40,9 @@ class commerce_braintree_subscription_handler_field_credit_card_edit_link extend
 
   function render($values) {
     $text = !empty($this->options['text']) ? $this->options['text'] : t('edit');
-    $token = $this->get_value($values, 'token');
+    $uid = $this->get_value($values, 'uid');
+    $sid = $this->get_value($values, 'sid');
     
-    return l($text, 'user/subscription/credit-card/' . $token . '/edit');
+    return l($text, "user/{$uid}/subscription/{$sid}/update" );
   }
 }

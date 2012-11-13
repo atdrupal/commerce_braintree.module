@@ -1,0 +1,130 @@
+<?php
+
+function subscription_informations_views_api() {     
+  return array(         
+    'api' => '3.0-alpha1',         
+    'path' => drupal_get_path('module', 'subscription_informations') . '/views',     
+  ); 
+}
+
+
+/**
+ * Write data to table commerce_briantree_subscription_informations
+ * @param stdClass $sub_info
+ */
+
+function subscription_informations_save(stdClass $sub_info) {
+  $record = array();
+  $record['sid'] = $sub_info->sid;
+  $record['plan_id'] = $sub_info->plan_id;
+  $record['price'] = $sub_info->price;
+  $record['first_bill_date'] = $sub_info->first_bill_date;
+  $record['billing_period_start_date'] = $sub_info->billing_period_start_date;
+  $record['billing_period_end_date'] = $sub_info->billing_period_end_date;
+  $record['paid_through_date'] = $sub_info->paid_through_date;
+  $record['next_bill_date'] = $sub_info->next_bill_date;
+  $record['next_billing_period_amount'] = $sub_info->next_billing_period_amount;
+  $is_update = commerce_braintree_subscription_load($record['sid']);
+  if ($is_update == FALSE) {
+    drupal_write_record("commerce_braintree_subscription_informations", $record);
+  }
+  else {
+    drupal_write_record("commerce_braintree_subscription_informations", $record, array('sid'));
+  }
+}
+
+/**
+ * Load subsciption informations by subscription id
+ * @param type $sid
+ * @return type
+ */
+function subscription_informations_load($sid) {
+  $result = db_query('SELECT * FROM {commerce_braintree_subscription_informations} c WHERE c.sid = :sid', array(':sid' => $sid))->fetchObject();
+  return isset($result) ? $result : FALSE;
+}
+
+/**
+ * Load subscription braintree server to local database
+ * @param type $sub 
+ */
+function subscription_informations_save_by_sid($sub) {
+  $sub_info = new stdClass();
+  $sub_info->sid = $sub->id;
+  $sub_info->plan_id = $sub->firstBillingDate->format('m/d/Y');;
+  $sub_info->price = $sub->price;
+  $sub_info->first_bill_date = $sub->id;
+  $sub_info->billing_period_start_date = $sub->billingPeriodStartDate->format('m/d/Y');;
+  $sub_info->billing_period_end_date = $sub->billingPeriodEndDate->format('m/d/Y');;
+  $sub_info->paid_through_date = $sub->paidThroughDate->format('m/d/Y');;
+  $sub_info->next_bill_date = $sub->nextBillingDate->format('m/d/Y');;
+  $sub_info->next_billing_period_amount = $sub->nextBillingPeriodAmount;
+  subscription_informations_save($sub_info);
+}
+
+
+/**
+ * Implements of hook_cb_subscription_charged_unsuccessfully().
+ */
+function subscription_informations_cb_subscription_canceled($user, $sid) {
+  subscription_informations_status_callback($user->uid, $sid);
+}
+
+/**
+ * Implements of hook_cb_subscription_charged_unsuccessfully().
+ */
+function subscription_informations_cb_subscription_charged_successfully($user, $sid) {
+  subscription_informations_status_callback($user->uid, $sid);
+}
+
+/**
+ * Implements of hook_cb_subscription_charged_unsuccessfully().
+ */
+function subscription_informations_cb_subscription_charged_unsuccessfully($user, $sid) {
+  subscription_informations_status_callback($user->uid, $sid);
+}
+
+/**
+ * Implements of hook_cb_subscription_expired().
+ */
+function subscription_informations_cb_subscription_expired($user, $sid) {
+  subscription_informations_status_callback($user->uid, $sid);
+}
+
+/**
+ * Implements of hook_cb_subscription_trial_ended().
+ */
+function subscription_informations_cb_subscription_trial_ended($user, $sid) {
+  subscription_informations_status_callback($user->uid, $sid);
+}
+
+/**
+ * Implements of hook_cb_subscription_went_past_due().
+ */
+function subscription_informations_cb_subscription_went_past_due($user, $sid) {
+  subscription_informations_status_callback($user->uid, $sid);
+}
+
+/**
+ * Implements of hook_cb_subscription_went_active().
+ */
+function subscription_informations_cb_subscription_went_active($user, $sid) {
+  subscription_informations_status_callback($user->uid, $sid);
+}
+
+/**
+ * Update status on local by user id and subscription id
+ * @param type $uid
+ * @param type $sid
+ */
+function subscription_informations_status_callback($uid, $sid) {
+  $sub = commerce_braintree_subscription_get_by_id($sid);
+  $status_local = subscription_informations_status_get($uid, $sid);
+  if ($sub->status != $status_local) {
+    subscription_informations_status_update($uid, $sid, $sub->status);
+    $log = new stdClass();
+    $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
+    $log->message = "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}";
+    commerce_braintree_log_save($log);
+    return 1;
+  }
+}

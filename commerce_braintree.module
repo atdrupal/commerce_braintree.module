@@ -33,16 +33,16 @@ function commerce_braintree_menu() {
     'weight' => -10,
     'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
-  $items['user/%user/subscription'] = array(
-    'title' => 'Subscriptions',
-    'page callback' => 'commerce_braintree_subscription_overview',
-    'page arguments' => array(1),
-    'access arguments' => array('view own subscription'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 5,
-    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
-    'file' => 'commerce_braintree.admin.inc',
-  );
+//  $items['user/%user/subscriptions'] = array(
+//    'title' => 'Subscriptions',
+//    'page callback' => 'commerce_braintree_subscription_overview',
+//    'page arguments' => array(1),
+//    'access arguments' => array('view own subscription'),
+//    'type' => MENU_LOCAL_TASK,
+//    'weight' => 5,
+//    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+//    'file' => 'commerce_braintree.admin.inc',
+//  );
 
   $subscription_base = array(
       'page arguments' => array(1, 3),
@@ -92,25 +92,6 @@ function commerce_braintree_menu() {
       'weight' => 2,
       ) + $subscription_base;
 
-  $items['user/subscription/credit-card/%/edit'] = array(
-    'title' => 'Credit card edit',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_creditcard_edit_form', 3),
-    'access callback' => 'commerce_braintree_creditcard_edit_access',
-    'access arguments' => array(3),
-    'type' => MENU_CALLBACK,
-    'file' => 'commerce_braintree.form.inc',
-  );
-  
-  $items['braintree/%/cancel'] = array(
-    'title' => 'Cancel braintree recurring billing',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('commerce_braintree_subscription_cancel_form', 1),
-    'access callback' => 'commerce_braintree_subscription_cancel_access',
-    'access arguments' => array(1), 
-    'type' => MENU_CALLBACK,
-    'file' => 'commerce_braintree.form.inc',
-  );
   $items['upgrade'] = array(
     'title' => 'Upgrade to Premium',
     'page callback' => 'drupal_get_form',
@@ -202,6 +183,7 @@ function commerce_braintree_subscription_cancel_access($sid) {
 }
 
 function commerce_braintree_creditcard_edit_access($sid) {
+  return TRUE;
   $has_access = FALSE;
   $sub = commerce_braintree_subscription_local_get(array('sid' => $sid), FALSE);
   if ($sub !== FALSE) {
@@ -587,7 +569,7 @@ function commerce_braintree_credit_card_update($credit_card, $token) {
   
   module_invoke_all('cb_creditcard_update', $result);
   module_invoke_all('cb_receive_data_braintree', $result, COMMERCE_BRAINTREE_CREDITCARD_UPDATE, '');
-  return ($result->success) ? $result : FALSE;
+  return $result;
 }
 
 /**
@@ -753,7 +735,7 @@ function commerce_braintree_subscription_create($order_id, $token, $plan_id, &$m
   $sub = Braintree_Subscription::create($subscription);
   if ($sub->success) {
     $message = "Transaction is successsfull";
-    module_invoke_all('cb_subscription_created', $sub, $order_id);
+    module_invoke_all('cb_subscription_created', $sub->subscription, $order_id);
   }
   else {
     $message = commerce_braintree_get_errors($sub);
@@ -964,8 +946,16 @@ function commerce_braintreee_string_to_star($str) {
 	return $stars;
 }
 
+function commerce_braintree_form_alter(&$form, $form_state, $form_id) {
+//  dsm($form);//die;
+//  dsm($form_state);
+//  dsm($form_state['triggering_element']['#parents']);
+//  $form['customer_profile_billing']['commerce_customer_address']['und'][0]['#address']['country'] = 'US';
+}
 
 
 
 
-
+function commerce_braintree_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
+//  dsm($field);
+}

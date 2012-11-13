@@ -4,6 +4,9 @@
  * Implementation of hook_views_api().
  */
 
+define('LOG_SSL_REQUEST', 'request');
+define('LOG_SSL_RESPONSE', 'response');
+
 function commerce_braintree_log_views_api() {     
   return array(         
     'api' => '3.0-alpha1',         
@@ -40,27 +43,27 @@ function commerce_braintree_log_permission() {
   );
 }
 
-/**
- * Implementation of hook_cb_send_data_braintree().
- */
-function commerce_braintree_log_cb_send_data_braintree($data, $action, $message) {
-  $log = new stdClass();
-  $log->data = $data;
-  $log->action = "SEND: " . $action;
-  $log->message = $message;
-  commerce_braintree_log_save($log);
-}
-
-/**
- * Implementation of hook_cb_receive_data_braintree().
- */
-function commerce_braintree_log_cb_receive_data_braintree($data, $action, $message) {
-  $log = new stdClass();
-  $log->data = $data;
-  $log->action = "RECV: " . $action;
-  $log->message = $message;
-  commerce_braintree_log_save($log);
-}
+///**
+// * Implementation of hook_cb_send_data_braintree().
+// */
+//function commerce_braintree_log_cb_send_data_braintree($data, $action, $message) {
+//  $log = new stdClass();
+//  $log->data = $data;
+//  $log->action = "SEND: " . $action;
+//  $log->message = $message;
+//  commerce_braintree_log_save($log);
+//}
+//
+///**
+// * Implementation of hook_cb_receive_data_braintree().
+// */
+//function commerce_braintree_log_cb_receive_data_braintree($data, $action, $message) {
+//  $log = new stdClass();
+//  $log->data = $data;
+//  $log->action = "RECV: " . $action;
+//  $log->message = $message;
+//  commerce_braintree_log_save($log);
+//}
 
 /**
  * Save log to database
@@ -77,3 +80,26 @@ function commerce_braintree_log_save(stdClass $log) {
   drupal_write_record("commerce_braintree_log", $record);
 }
 
+function commerce_braintree_log_ssl($data, $action) {
+  $log = new stdClass();
+  $log->uid = $GLOBALS['user']->uid;
+  $log->action = $action;
+  
+  if ($action == LOG_SSL_REQUEST) {
+//    dsm($data);
+    $request_data = Braintree_Xml_Parser::arrayFromXml($data);
+    $keys = array_keys($request_data);
+    foreach ($keys as $key) {
+      if ($key == 'creditCard') {
+        $credit_card = $request_data[$key];
+        $request_data[$key] = commerce_braintree_creditcard_mask($credit_card);
+        break;
+      }
+    }
+//    dsm($request_data);
+    $data = Braintree_Xml_Generator::arrayToXml($request_data);
+    dsm($data);
+  }
+  $log->data = $data;
+  commerce_braintree_log_save($log);
+}
