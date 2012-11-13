@@ -16,49 +16,49 @@ function commerce_braintree_subscription_views_api() {
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function commerce_braintree_subscription_cb_subscription_canceled($user, $sid) {
-  commmerce_braintree_subscription_status_change($user->uid, $sid);
+  commerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function commerce_braintree_subscription_cb_subscription_charged_successfully($user, $sid) {
-  commmerce_braintree_subscription_status_change($user->uid, $sid);
+  commerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_charged_unsuccessfully().
  */
 function commerce_braintree_subscription_cb_subscription_charged_unsuccessfully($user, $sid) {
-  commmerce_braintree_subscription_status_change($user->uid, $sid);
+  commerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_expired().
  */
 function commerce_braintree_subscription_cb_subscription_expired($user, $sid) {
-  commmerce_braintree_subscription_status_change($user->uid, $sid);
+  commerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_trial_ended().
  */
 function commerce_braintree_subscription_cb_subscription_trial_ended($user, $sid) {
-  commmerce_braintree_subscription_status_change($user->uid, $sid);
+  commerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_past_due().
  */
 function commerce_braintree_subscription_cb_subscription_went_past_due($user, $sid) {
-  commmerce_braintree_subscription_status_change($user->uid, $sid);
+  commerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
  * Implements of hook_cb_subscription_went_active().
  */
 function commerce_braintree_subscription_cb_subscription_went_active($user, $sid) {
-  commmerce_braintree_subscription_status_change($user->uid, $sid);
+  commerce_braintree_subscription_status_change($user->uid, $sid);
 }
 
 /**
@@ -120,11 +120,11 @@ function commerce_braintree_subscription_local_update($uid, $sid) {
  * @param type $uid
  * @param type $sid
  */
-function commmerce_braintree_subscription_status_change($uid, $sid) {
-  commmerce_braintree_subscription_local_update($uid, $sid);
+function commerce_braintree_subscription_status_change($uid, $sid) {
+  commerce_braintree_subscription_local_update($uid, $sid);
   $log = new stdClass();
   $log->action = COMMERCE_BRAINTREE_WEBHOOK_CALLBACK;
-  $log->message = "Updated user {$uid} sid {$sid} from {$status_local} to {$sub->status}";
+  $log->message = "Updated user {$uid} subscription id {$sid}";
   commerce_braintree_log_save($log);
   return 1;
 }
@@ -163,7 +163,7 @@ function commerce_braintree_subscription_synchronization() {
       continue;
     }
     if (strcmp($row->status, $sub->status) != 0) {
-      commmerce_braintree_subscription_local_update($row->uid, $row->sid);
+      commerce_braintree_subscription_local_update($row->uid, $row->sid);
       $user = user_load($row->uid);
       commerce_braintree_subscription_status_callback_hook($sub->status, $user, $row->sid);
       //log

@@ -49,8 +49,6 @@ function commerce_braintree_creditcard_edit_form($form, &$form_state, $sid) {
     'exp_year' => isset($creditcard->expirationYear) ? $creditcard->expirationYear : '',
   );
   
-  $profile = commerce_customer_profile_new('billing', $GLOBALS['user']->uid);
-  
   // load oder
   $order = commerce_order_load($sub['order_id']);
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
